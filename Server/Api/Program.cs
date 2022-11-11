@@ -2,6 +2,8 @@ const string APP_TITLE = "Expense Tracker";
 
 
 var builder = WebApplication.CreateBuilder(args);
+var config = builder.Configuration;
+
 
 // Add services to the container.
 
@@ -20,6 +22,12 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+app.UseRouting();
+
+app.UseCors(policy => policy.AllowAnyHeader().AllowAnyMethod().WithOrigins(config["ClientUrl"]));
+
+app.UseAuthentication();
 
 app.UseAuthorization();
 
