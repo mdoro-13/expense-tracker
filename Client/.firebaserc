@@ -1,0 +1,14 @@
+{
+  "targets": {
+    "expense-tracker-1cee7": {
+      "hosting": {
+        "Client": [
+          "expense-tracker-1cee7"
+        ]
+      }
+    }
+  },
+  "projects": {
+    "default": "expense-tracker-1cee7"
+  }
+}
