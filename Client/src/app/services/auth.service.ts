@@ -2,7 +2,6 @@ import { Injectable } from '@angular/core';
 import { AngularFireAuth } from '@angular/fire/compat/auth';
 import { Router } from '@angular/router';
 import firebase from 'firebase/compat/app';
-import { BehaviorSubject } from 'rxjs';
 
 
 @Injectable({
@@ -14,9 +13,9 @@ export class AuthService {
 
   public googleSignIn() {
     this.fa.signInWithPopup(new firebase.auth.GoogleAuthProvider()).then(response => {
-      console.log(response)
-      // TODO: navigate somewhere
+      this.router.navigateByUrl('/home')
     }).catch(error => {
+      // TODO: maybe display error in UI
       console.log(error)
     });
   }
@@ -25,7 +24,7 @@ export class AuthService {
     this.fa.signOut().then(response => {
       console.log(response)
     }).catch(error => {
-      // TODO: send message to UI
+      // TODO: maybe display error in UI
       console.log(error)
     })
   }
