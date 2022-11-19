@@ -1,23 +1,31 @@
-using FirebaseAdmin;
-using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Server.Authentication;
-
-const string APP_TITLE = "Expense Tracker";
-const string AUTHENTICATION_SCHEME = JwtBearerDefaults.AuthenticationScheme;
-
+using Microsoft.IdentityModel.Tokens;
 
 var builder = WebApplication.CreateBuilder(args);
 var config = builder.Configuration;
 
+const string APP_TITLE = "Expense Tracker";
+const string AUTHENTICATION_SCHEME = JwtBearerDefaults.AuthenticationScheme;
+
+string firebaseSecureTokenURL = config.GetSection("Firebase").GetValue<string>("SecureTokenURL");
+string firebaseProjectId = config.GetSection("Firebase").GetValue<string>("ProjectId");
+
 
 // Add services to the container.
 
-builder.Services.AddSingleton(FirebaseApp.Create());
-
 builder.Services
     .AddAuthentication(AUTHENTICATION_SCHEME)
-    .AddScheme<AuthenticationSchemeOptions, FirebaseAuthenticationHandler>(AUTHENTICATION_SCHEME, o => { });
+    .AddJwtBearer(options =>
+    {
+        options.Authority = $"{firebaseSecureTokenURL}/{firebaseProjectId}";
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidIssuer = $"{firebaseSecureTokenURL}/{firebaseProjectId}",
+            ValidAudience = firebaseProjectId,
+            ValidateLifetime = true
+        };
+    });
 
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
