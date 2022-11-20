@@ -1,0 +1,11 @@
+﻿namespace Api.Domain.Entities;
+
+#pragma warning disable CS8618
+
+public class Budget
+{
+    public int Id { get; set; }
+    public DateTime StartDate { get; set; }
+    public DateTime EndDate { get; set; }
+    public virtual ICollection<SpendingLimit> SpendingLimits { get; set; }
+}
