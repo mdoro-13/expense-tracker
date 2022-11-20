@@ -1,0 +1,17 @@
+<div class="container signup-container">
+  <div class="title-container d-flex flex-row mb-2">
+    <img class="coins" src="../../assets/coins.png" width="100px" height="100px">
+    <h1 class="signup-title">Expense Tracker</h1>
+  </div>
+  <ul>
+    <li class="item mt-3">Plan your budget</li>
+    <li class="item">Track your expenses</li>
+    <li class="item">Get insights into your spending habits</li>
+    <li class="item">Generate spending reports</li>
+  </ul>
+  <div class="button-container">
+    <cool-google-button color="dark" (click)="authService.googleSignIn()">
+      Sign in with Google
+    </cool-google-button>
+  </div>
+</div>
