@@ -8,6 +8,6 @@ public class Expense
     public DateTime Date { get; set; }
     public string Details { get; set; }
     public string UserId { get; set; }
-    public int CategoryId { get; set; }
-    public virtual Category Category { get; set; }
+    public int? CategoryId { get; set; }
+    public virtual Category? Category { get; set; }
 }
