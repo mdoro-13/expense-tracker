@@ -1,4 +1,6 @@
+using Api.Infrastructure.Data;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -31,6 +33,9 @@ builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerDocument(configure => configure.Title = APP_TITLE);
+
+builder.Services.AddDbContext<DataContext>(options =>
+    options.UseNpgsql(config.GetConnectionString("ExpenseTracker")));
 
 var app = builder.Build();
 
