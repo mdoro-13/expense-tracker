@@ -1,4 +1,5 @@
 using Api.Infrastructure.Data;
+using Api.Infrastructure.Data.Seed;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -38,6 +39,24 @@ builder.Services.AddDbContext<DataContext>(options =>
     options.UseNpgsql(config.GetConnectionString("ExpenseTracker")));
 
 var app = builder.Build();
+
+if (app.Environment.IsDevelopment())
+{
+    try
+    {
+        using (var scope = app.Services.CreateScope())
+        {
+            var context = scope.ServiceProvider.GetRequiredService<DataContext>();
+            await context.Database.MigrateAsync();
+            await CategoriesSeed.SeedCategoriesAsync(context);
+        }
+    }
+    catch (Exception ex)
+    {
+        var logger = app.Services.GetRequiredService<ILogger<Program>>();
+        logger.LogError(ex, "An error has occurred during migration");
+    }
+}
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
