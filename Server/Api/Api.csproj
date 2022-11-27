@@ -9,6 +9,7 @@
   <ItemGroup>
 	  <PackageReference Include="Bogus" Version="34.0.2" />
 	  <PackageReference Include="Mapster" Version="7.3.0" />
+	  <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="6.0.11" />
 	  <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="7.0.0">
 	    <PrivateAssets>all</PrivateAssets>
 	    <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
@@ -23,7 +24,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="DTO\Request\" />
     <Folder Include="Infrastructure\Data\Migrations\" />
     <Folder Include="Utils\Extensions\" />
   </ItemGroup>
