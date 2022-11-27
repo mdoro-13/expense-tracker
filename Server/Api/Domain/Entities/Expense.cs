@@ -1,7 +1,9 @@
-﻿namespace Api.Domain.Entities;
+﻿using Api.Domain.Interfaces;
+
+namespace Api.Domain.Entities;
 
 #pragma warning disable CS8618
-public class Expense
+public class Expense : IEntity<int>, IHasUser<string>
 {
     public int Id { get; set; }
     public decimal Amount { get; set; }

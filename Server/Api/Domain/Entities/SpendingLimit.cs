@@ -1,8 +1,10 @@
-﻿namespace Api.Domain.Entities;
+﻿using Api.Domain.Interfaces;
+
+namespace Api.Domain.Entities;
 
 #pragma warning disable CS8618
 
-public class SpendingLimit
+public class SpendingLimit : IEntity<int>
 {
     public int Id { get; set; }
     public decimal Amount { get; set; }

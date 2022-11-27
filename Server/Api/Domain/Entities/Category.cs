@@ -1,8 +1,10 @@
-﻿namespace Api.Domain.Entities;
+﻿using Api.Domain.Interfaces;
+
+namespace Api.Domain.Entities;
 
 #pragma warning disable CS8618
 
-public class Category
+public class Category : IEntity<int>, IHasUser<string>
 {
     public int Id { get; set; }
     public string Name { get; set; }
