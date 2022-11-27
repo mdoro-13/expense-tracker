@@ -16,7 +16,7 @@
 	  <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="7.0.0" />
 	  <PackageReference Include="NSwag.AspNetCore" Version="13.18.0" />
 	  <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="6.0.9" />
-	  <PackageReference Include="NSwag.MSBuild" Version="13.16.1">
+	  <PackageReference Include="NSwag.MSBuild" Version="13.18.0">
 		  <PrivateAssets>all</PrivateAssets>
 		  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 	  </PackageReference>
@@ -27,5 +27,7 @@
     <Folder Include="Infrastructure\Data\Migrations\" />
     <Folder Include="Utils\Extensions\" />
   </ItemGroup>
-
+	<Target Name="NSwag" AfterTargets="PostBuildEvent" Condition=" '$(Configuration)' == 'Debug' ">
+		<Exec WorkingDirectory="$(ProjectDir)" EnvironmentVariables="ASPNETCORE_ENVIRONMENT=Development" Command="$(NSwagExe_Net60) run nswag.json /variables:Configuration=$(Configuration)" />
+	</Target>
 </Project>

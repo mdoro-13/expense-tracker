@@ -3,12 +3,12 @@
   "defaultVariables": null,
   "documentGenerator": {
     "aspNetCoreToOpenApi": {
-      "project": "",
+      "project": "Api.csproj",
       "msBuildProjectExtensionsPath": null,
       "configuration": null,
       "runtime": null,
       "targetFramework": null,
-      "noBuild": false,
+      "noBuild": true,
       "msBuildOutputPath": null,
       "verbose": true,
       "workingDirectory": null,
@@ -54,9 +54,7 @@
       "output": null,
       "outputType": "Swagger2",
       "newLineBehavior": "Auto",
-      "assemblyPaths": [
-        "bin/Debug/net6.0/Api.dll"
-      ],
+      "assemblyPaths": [],
       "assemblyConfig": null,
       "referencePaths": [],
       "useNuGetCache": false
@@ -76,7 +74,7 @@
       "injectionTokenType": "OpaqueToken",
       "rxJsVersion": 6.0,
       "dateTimeType": "Date",
-      "nullValue": "Undefined",
+      "nullValue": "Null",
       "generateClientClasses": false,
       "generateClientInterfaces": false,
       "generateOptionalParameters": false,
@@ -106,7 +104,7 @@
       "excludedTypeNames": [],
       "excludedParameterNames": [],
       "handleReferences": false,
-      "generateTypeCheckFunctions": false,
+      "generateTypeCheckFunctions": true,
       "generateConstructorInterface": true,
       "convertConstructorInterfaceData": false,
       "importRequiredTypes": true,
@@ -123,7 +121,7 @@
       "enumNameGeneratorType": null,
       "serviceHost": null,
       "serviceSchemes": null,
-      "output": "../../Client/src/app/api-models.ts",
+      "output": "../../Client/src/app/models/api-models.ts",
       "newLineBehavior": "Auto"
     }
   }
