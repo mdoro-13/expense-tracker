@@ -46,9 +46,17 @@ export function isOperation(object: any): object is Operation {
     return object && object[''] === 'Operation';
 }
 
-export interface FileResponse {
-    data: Blob;
-    status: number;
-    fileName?: string;
-    headers?: { [name: string]: any };
+export interface ExpenseReadDto {
+    id: number;
+    amount: number;
+    date: Date;
+    details: string;
+    categoryId?: number | null;
+}
+
+export interface ExpenseCreateDto {
+    amount: number;
+    date: Date;
+    details: string;
+    categoryId?: number | null;
 }
