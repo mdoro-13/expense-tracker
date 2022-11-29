@@ -1,4 +1,5 @@
-﻿using Api.Domain.Entities;
+﻿using Api.Core.Validation.DTO;
+using Api.Domain.Entities;
 using Api.DTO.Request;
 using Api.DTO.Response;
 using Api.Infrastructure.Data;
@@ -74,7 +75,7 @@ public class CategoryController : BaseApiController
 	[ProducesResponseType(typeof(CreatedAtRouteResult), StatusCodes.Status404NotFound)]
 	[ProducesResponseType(typeof(BadRequestResult), StatusCodes.Status400BadRequest)]
 	[HttpPatch("{id:int}")]
-	public async Task<IActionResult> Patch(int id, [FromBody] JsonPatchDocument<CategoryCreateDto> categoryPatchDto)
+	public async Task<IActionResult> Patch(int id, [FromBody] JsonPatchDocument<Category> categoryPatchDto)
 	{
 		var categoryToUpdate = await GetCategoryByIdAsync(id);
 
@@ -83,16 +84,20 @@ public class CategoryController : BaseApiController
 			return NotFound();
 		}
 
-		var categoryPatch = categoryPatchDto.Adapt<JsonPatchDocument<Category>>();
-        categoryPatch.ApplyTo(categoryToUpdate);
+        categoryPatchDto.ApplyTo(categoryToUpdate);
+
+		// TODO: prevent updating category name to empty/longer than 50
+
+		var validator = new CategoryCreateDtoValidator();
+		var result = await validator.ValidateAsync(categoryToUpdate.Adapt<CategoryCreateDto>());
+		if (!result.IsValid)
+		{
+			return BadRequest(result.Errors.Select(e => e.ErrorMessage));
+		}
 
 		_context.Set<Category>().Update(categoryToUpdate);
 
-		if (_context.Entry(categoryToUpdate).Property(x => x.UserId).IsModified)
-		{
-			return BadRequest();
-		}
-
+		_context.Entry(categoryToUpdate).Property(x => x.UserId).IsModified = false;
 
         if (await _context.SaveChangesAsync() <= 0)
         {
