@@ -31,7 +31,7 @@ public class CategoryController : BaseApiController
 
 	[HttpGet("{id:int}", Name = "GetCategory")]
 	[ProducesResponseType(typeof(CategoryReadDto), StatusCodes.Status200OK)]
-	[ProducesResponseType(typeof(CategoryReadDto), StatusCodes.Status404NotFound)]
+	[ProducesResponseType(StatusCodes.Status404NotFound)]
 	public async Task<IActionResult> Get(int id)
 	{
 		var category = await GetCategoryByIdAsync(id);
@@ -44,8 +44,8 @@ public class CategoryController : BaseApiController
 		return Ok(category.Adapt<CategoryReadDto>());
 	}
 
-	[ProducesResponseType(typeof(CreatedAtRouteResult), StatusCodes.Status201Created)]
-	[ProducesResponseType(typeof(BadRequestResult), StatusCodes.Status400BadRequest)]
+	[ProducesResponseType(StatusCodes.Status201Created)]
+	[ProducesResponseType(StatusCodes.Status400BadRequest)]
 	[HttpPost]
 	public async Task<IActionResult> Post(CategoryCreateDto categoryCreateDto)
 	{
@@ -71,9 +71,9 @@ public class CategoryController : BaseApiController
 
 	}
 
-	[ProducesResponseType(typeof(CreatedAtRouteResult), StatusCodes.Status204NoContent)]
-	[ProducesResponseType(typeof(CreatedAtRouteResult), StatusCodes.Status404NotFound)]
-	[ProducesResponseType(typeof(BadRequestResult), StatusCodes.Status400BadRequest)]
+	[ProducesResponseType(StatusCodes.Status204NoContent)]
+	[ProducesResponseType(StatusCodes.Status404NotFound)]
+	[ProducesResponseType(StatusCodes.Status400BadRequest)]
 	[HttpPatch("{id:int}")]
 	public async Task<IActionResult> Patch(int id, [FromBody] JsonPatchDocument<Category> categoryPatchDto)
 	{
@@ -111,8 +111,8 @@ public class CategoryController : BaseApiController
 		return NoContent();
     }
 
-    [ProducesResponseType(typeof(CreatedAtRouteResult), StatusCodes.Status204NoContent)]
-    [ProducesResponseType(typeof(CreatedAtRouteResult), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
     [HttpDelete("{id:int}")]
 	public async Task<IActionResult> Delete(int id)
 	{

@@ -16,6 +16,17 @@ export interface CategoryReadDto {
     color: string;
 }
 
+export interface ProblemDetails {
+    type?: string | null;
+    title?: string | null;
+    status?: number | null;
+    detail?: string | null;
+    instance?: string | null;
+    extensions: { [key: string]: any; };
+
+    [key: string]: any;
+}
+
 export interface CategoryCreateDto {
     name: string;
     color: string;
