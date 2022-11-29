@@ -86,13 +86,17 @@ public class CategoryController : BaseApiController
 
         categoryPatchDto.ApplyTo(categoryToUpdate);
 
-		// TODO: prevent updating category name to empty/longer than 50
-
 		var validator = new CategoryCreateDtoValidator();
 		var result = await validator.ValidateAsync(categoryToUpdate.Adapt<CategoryCreateDto>());
 		if (!result.IsValid)
 		{
-			return BadRequest(result.Errors.Select(e => e.ErrorMessage));
+			var errors = new List<string>();
+			foreach (var error in result.Errors)
+			{
+				errors.Add(error.ErrorMessage);
+			}
+
+			return BadRequest(new { errors });
 		}
 
 		_context.Set<Category>().Update(categoryToUpdate);
