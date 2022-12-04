@@ -1,5 +1,4 @@
-﻿using Api.Core.Validation.DTO;
-using Api.Domain.Entities;
+﻿using Api.Domain.Entities;
 using Api.DTO.Request;
 using Api.DTO.Response;
 using Api.Infrastructure.Data;
@@ -107,6 +106,8 @@ public class ExpenseController : BaseApiController
 	[HttpPatch("{id:int}")]
 	public async Task<IActionResult> Patch(int id, [FromBody] JsonPatchDocument<Expense> expensePatch)
 	{
+		// TODO: check if expense belongs to a budget
+		// Otherwise, adding an expense should not be possible
 		var expenseToUpdate = await GetExpenseByIdAsync(id);
 
             if (expenseToUpdate is null)
