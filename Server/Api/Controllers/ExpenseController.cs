@@ -45,6 +45,10 @@ public class ExpenseController : BaseApiController
 				query = sort.Direction > 0 ? query.OrderBy(e => e.Category.Name) : query.OrderByDescending(e => e.Category.Name);
 				break;
 			
+			case "amount":
+				query = sort.Direction > 0 ? query.OrderBy(e => e.Amount) : query.OrderByDescending(e => e.Amount);
+				break;
+
 			default:
 				query = sort.Direction > 0 ? query.OrderBy(e => e.Date) : query.OrderByDescending(e => e.Date);
 				break;
