@@ -54,6 +54,11 @@ export interface ExpenseReadDto {
     categoryId?: number | null;
 }
 
+export enum Direction {
+    Ascending = 1,
+    Descending = -1,
+}
+
 export interface ExpenseCreateDto {
     amount: number;
     date: Date;

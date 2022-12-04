@@ -1,13 +1,6 @@
 namespace Api.Utils.Query;
 
-public sealed record ExpenseParams
-{
-    public Paging Paging { get; set; }
-    public ExpenseFilter Filter { get; set; }
-    public ExpenseSort Sort { get; set; }
-}
-
-public sealed record Paging 
+public sealed record ExpensePaging 
 {
     private const int MaxPageSize = 100;
     public int PageNumber { get; set; } = 1;
@@ -29,7 +22,7 @@ public sealed record ExpenseFilter
 
 public sealed record ExpenseSort 
 {
-    public string By { get; set; } = "date";
+    public string SortBy { get; set; } = "date";
     public Direction Direction { get; set; } = Direction.Descending;
 }
 

@@ -5,6 +5,7 @@ using Api.DTO.Response;
 using Api.Infrastructure.Data;
 using Api.Utils.Extensions;
 using Api.Utils.Helpers;
+using Api.Utils.Query;
 using Api.Validation.DTO;
 using Mapster;
 using Microsoft.AspNetCore.JsonPatch;
@@ -23,13 +24,39 @@ public class ExpenseController : BaseApiController
 
 	[HttpGet]
 	[ProducesResponseType(typeof(ICollection<ExpenseReadDto>), StatusCodes.Status200OK)]
-	public async Task<IActionResult> Get()
+	public async Task<IActionResult> Get([FromQuery] ExpenseFilter filter, [FromQuery] ExpenseSort sort, [FromQuery] ExpensePaging paging)
 	{
-		var expenses = await _context
+		var query = _context
 			.BelongsToUser<Expense>(User)
-			.ToListAsync();
+			.Include(e => e.Category)
+			.Where(e => e.Date >= filter.DateFrom && e.Date <= filter.DateTo);
+		
+		if (filter.CategoryIds.Any())
+		{
+			query = query.Where(e => filter.CategoryIds.Contains(e.CategoryId));
+		}
 
-		return Ok(expenses.Adapt<ICollection<ExpenseReadDto>>());
+		switch(sort.SortBy)
+		{
+			case "date":
+				query = sort.Direction > 0 ? query.OrderBy(e => e.Date) : query.OrderByDescending(e => e.Date);
+				break;
+			
+			case "categoryName":
+				query = sort.Direction > 0 ? query.OrderBy(e => e.Category.Name) : query.OrderByDescending(e => e.Category.Name);
+				break;
+			
+			default:
+				query = sort.Direction > 0 ? query.OrderBy(e => e.Date) : query.OrderByDescending(e => e.Date);
+				break;
+		}
+
+		var pagedExpenses = await PagedList<ExpenseReadDto>
+			.CreateAsync(query.ProjectToType<ExpenseReadDto>().AsNoTracking(), paging.PageNumber, paging.PageSize);
+
+        Response.AddPaginationHeader(pagedExpenses.CurrentPage, pagedExpenses.PageSize, pagedExpenses.TotalCount, pagedExpenses.TotalPages);
+		
+		return Ok(pagedExpenses);
 	}
 
 	[HttpGet("{id:int}", Name = "GetExpense")]
