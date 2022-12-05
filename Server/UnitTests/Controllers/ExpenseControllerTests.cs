@@ -7,8 +7,11 @@ using Api.Utils.Query;
 using FluentAssertions;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
+using Namotion.Reflection;
+using UnitTests.Utils;
 using Xunit;
 
 namespace UnitTests.Controllers;
@@ -43,7 +46,7 @@ public sealed class ExpenseControllerTests
     }
     
     [Fact]
-    public async Task GetAll()
+    public async Task GetAll_Sort_And_Filter()
     {
         using (var connection = new SqliteConnection("DataSource=:memory:"))
         {
@@ -94,13 +97,84 @@ public sealed class ExpenseControllerTests
             await dbContext.SaveChangesAsync();
             
             // ACT
-            await SortByDate_And_FilterByDate(dbContext, expense3, expense1, expense4);
+            await SortByDate_And_FilterByDate(dbContext, expense3.Date, expense1.Date, expense4);
             await SortByAmount_And_FilterByDateAndCategory(dbContext, expense1.Amount, expense2.Amount);
         }
     }
 
+    [Theory]
+    [InlineData(1, 10, 50)]
+    [InlineData(1, 101, 110)]
+    [InlineData(1, 80, 50)]
+    [InlineData(2, 50, 40)]
+    [InlineData(2, 10, 10)]
+    [InlineData(3, 10, 20)]
+    [InlineData(2, 5, 25)]
+    [InlineData(3, 7, 28)]
+    public async Task GetAll_Pagination(int pageNumber, int pageSize, int generatedExpenses)
+    {
+        var random = new Random();
+        const int maxPerPage = 100;
+        using (var connection = new SqliteConnection("DataSource=:memory:"))
+        {
+            var dbContext = await InitializeDb(connection);
+            await dbContext.Set<Category>().AddRangeAsync(_defaultCategories);
+            await dbContext.SaveChangesAsync();
+
+            for (int i = 0; i < generatedExpenses; i++)
+            {
+                var expense = new Expense
+                {
+                    CategoryId = random.Next(1, 2),
+                    Amount = random.Next(1, 5000),
+                    UserId = UserId,
+                    Date = new DateTime(2022, DateTime.UtcNow.Month, random.Next(1, 28)),
+                };
+                await dbContext.Set<Expense>().AddAsync(expense);
+            }
+
+            await dbContext.SaveChangesAsync();
+
+            var controller = ControllerTestUtils.InitializeController(dbContext, _user);
+            var paging = new ExpensePaging
+            {
+                PageNumber = pageNumber,
+                PageSize = pageSize
+            };
+
+            var result = await controller.Get(new ExpenseFilter(), new ExpenseSort(), paging);
+            result.Should().BeOfType<OkObjectResult>();
+
+            //var header = controller.Response.Headers["Pagination"].
+
+            var resultValue = ResultValue<ExpenseReadDto>(result);
+
+            if (pageSize > maxPerPage && pageSize <= generatedExpenses && pageNumber == 1)
+            {
+                resultValue.Count.Should().Be(maxPerPage);
+            }
+            else if (pageSize <= generatedExpenses && pageNumber == 1)
+            {
+                resultValue.Count.Should().Be(pageSize);
+            }
+            else if (pageSize >= generatedExpenses && pageNumber == 1)
+            {
+                resultValue.Count.Should().Be(generatedExpenses);
+            }
+
+            if (pageNumber > 1 && pageSize >= generatedExpenses)
+            {
+                resultValue.Count.Should().Be(0);
+            }
+
+        }
+
+    }
+
     private async Task SortByAmount_And_FilterByDateAndCategory(DataContext dbContext, decimal highestAmount, decimal lowestAmount)
     {
+        var controller = ControllerTestUtils.InitializeController(dbContext, _user);
+
         var filterByDateAndCategory = new ExpenseFilter
         {
             DateFrom = new DateTime(2022, 1, 1),
@@ -120,15 +194,6 @@ public sealed class ExpenseControllerTests
             PageSize = 25
         };
 
-        var controller = new ExpenseController(dbContext);
-        controller.ControllerContext = new ControllerContext
-        {
-            HttpContext = new DefaultHttpContext
-            {
-                User = _user
-            }
-        };
-
         var result = await controller.Get(filterByDateAndCategory, sortByAmount, firstPage25PageSize);
         result.Should().BeOfType<OkObjectResult>();
 
@@ -143,16 +208,9 @@ public sealed class ExpenseControllerTests
         lowestAmountLast.Should().BeTrue();
     }
     
-    private async Task SortByDate_And_FilterByDate(DataContext dbContext, Expense expense3, Expense expense1, Expense outOfTimeRangeExpense)
+    private async Task SortByDate_And_FilterByDate(DataContext dbContext, DateTime greatestDate, DateTime lowestDate, Expense outOfTimeRangeExpense)
     {
-        var controller = new ExpenseController(dbContext);
-        controller.ControllerContext = new ControllerContext
-        {
-            HttpContext = new DefaultHttpContext
-            {
-                User = _user
-            }
-        };
+        var controller = ControllerTestUtils.InitializeController(dbContext, _user);
 
         var filterByDate = new ExpenseFilter
         {
@@ -177,11 +235,11 @@ public sealed class ExpenseControllerTests
         
         var greatestDateFirst = resultValue
             .FirstOrDefault()
-            .Date == expense3.Date;
+            .Date == greatestDate;
 
         var lowestDateLast = resultValue
             .Last()
-            .Date == expense1.Date;
+            .Date == lowestDate;
 
         var outOfTimeRangeExpenseIsExcluded = resultValue.All(e => e.Date != outOfTimeRangeExpense.Date);
 
