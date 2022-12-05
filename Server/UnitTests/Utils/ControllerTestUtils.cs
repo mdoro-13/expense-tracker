@@ -8,9 +8,9 @@ namespace UnitTests.Utils;
 
 internal static class ControllerTestUtils
 {
-    internal static ExpenseController InitializeController(DataContext dbContext, ClaimsPrincipal user)
+    internal static T InitializeController<T>(DataContext dbContext, ClaimsPrincipal user) where T : BaseApiController
     {
-        var controller = new ExpenseController(dbContext);
+        var controller = Activator.CreateInstance(typeof(T), new object[] {dbContext}) as T;
         controller.ControllerContext = new ControllerContext
         {
             HttpContext = new DefaultHttpContext

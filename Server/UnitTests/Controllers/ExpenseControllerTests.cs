@@ -135,7 +135,7 @@ public sealed class ExpenseControllerTests
 
             await dbContext.SaveChangesAsync();
 
-            var controller = ControllerTestUtils.InitializeController(dbContext, _user);
+            var controller = ControllerTestUtils.InitializeController<ExpenseController>(dbContext, _user);
             var paging = new ExpensePaging
             {
                 PageNumber = pageNumber,
@@ -191,7 +191,7 @@ public sealed class ExpenseControllerTests
             await dbContext.Set<Expense>().AddAsync(expense);
             await dbContext.SaveChangesAsync();
 
-            var controller = ControllerTestUtils.InitializeController(dbContext, _user);
+            var controller = ControllerTestUtils.InitializeController<ExpenseController>(dbContext, _user);
             var result = await controller.Get(1);
             result.Should().BeOfType<OkObjectResult>();
 
@@ -218,7 +218,7 @@ public sealed class ExpenseControllerTests
             await dbContext.Set<Expense>().AddAsync(expense);
             await dbContext.SaveChangesAsync();
 
-            var controller = ControllerTestUtils.InitializeController(dbContext, _user);
+            var controller = ControllerTestUtils.InitializeController<ExpenseController>(dbContext, _user);
             var result = await controller.Get(2);
             result.Should().BeOfType<NotFoundResult>();
 
@@ -245,7 +245,7 @@ public sealed class ExpenseControllerTests
             await dbContext.Set<Expense>().AddAsync(expense);
             await dbContext.SaveChangesAsync();
 
-            var controller = ControllerTestUtils.InitializeController(dbContext, _user);
+            var controller = ControllerTestUtils.InitializeController<ExpenseController>(dbContext, _user);
             var result = await controller.Get(1);
             result.Should().BeOfType<NotFoundResult>();
 
@@ -254,7 +254,7 @@ public sealed class ExpenseControllerTests
 
     private async Task SortByAmount_And_FilterByDateAndCategory(DataContext dbContext, decimal highestAmount, decimal lowestAmount)
     {
-        var controller = ControllerTestUtils.InitializeController(dbContext, _user);
+        var controller = ControllerTestUtils.InitializeController<ExpenseController>(dbContext, _user);
 
         var filterByDateAndCategory = new ExpenseFilter
         {
@@ -291,7 +291,7 @@ public sealed class ExpenseControllerTests
     
     private async Task SortByDate_And_FilterByDate(DataContext dbContext, DateTime greatestDate, DateTime lowestDate, Expense outOfTimeRangeExpense)
     {
-        var controller = ControllerTestUtils.InitializeController(dbContext, _user);
+        var controller = ControllerTestUtils.InitializeController<ExpenseController>(dbContext, _user);
 
         var filterByDate = new ExpenseFilter
         {
