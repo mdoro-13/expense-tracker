@@ -17,7 +17,7 @@ public sealed record ExpenseFilter
 {
     public DateTime DateFrom { get; set; } = DateTime.MinValue.ToUniversalTime();
     public DateTime DateTo { get; set; } = DateTime.MaxValue.ToUniversalTime();
-    public int?[] CategoryIds { get; set; } = new int?[] {};
+    public ICollection<int?> CategoryIds { get; set; } = new int?[] {};
 }
 
 public sealed record ExpenseSort 
