@@ -147,7 +147,7 @@ public sealed class ExpenseControllerTests
 
             //var header = controller.Response.Headers["Pagination"].
 
-            var resultValue = ResultValue<ExpenseReadDto>(result);
+            var resultValue = ResultCollectionValue<ExpenseReadDto>(result);
 
             if (pageSize > maxPerPage && pageSize <= generatedExpenses && pageNumber == 1)
             {
@@ -169,6 +169,87 @@ public sealed class ExpenseControllerTests
 
         }
 
+    }
+
+    [Fact]
+    public async Task GetById_Returns_200_If_Found()
+    {
+        using (var connection = new SqliteConnection("DataSource=:memory:"))
+        {
+            var dbContext = await InitializeDb(connection);
+            await dbContext.Set<Category>().AddRangeAsync(_defaultCategories);
+
+            var expense = new Expense
+            {
+                CategoryId = 1,
+                Amount = 200M,
+                Date = DateTime.UtcNow,
+                UserId = UserId,
+                Details = "test"
+            };
+
+            await dbContext.Set<Expense>().AddAsync(expense);
+            await dbContext.SaveChangesAsync();
+
+            var controller = ControllerTestUtils.InitializeController(dbContext, _user);
+            var result = await controller.Get(1);
+            result.Should().BeOfType<OkObjectResult>();
+
+        }
+    }
+
+    [Fact]
+    public async Task GetById_Returns_404_If_Not_Found()
+    {
+        using (var connection = new SqliteConnection("DataSource=:memory:"))
+        {
+            var dbContext = await InitializeDb(connection);
+            await dbContext.Set<Category>().AddRangeAsync(_defaultCategories);
+
+            var expense = new Expense
+            {
+                CategoryId = 1,
+                Amount = 200M,
+                Date = DateTime.UtcNow,
+                UserId = UserId,
+                Details = "test"
+            };
+
+            await dbContext.Set<Expense>().AddAsync(expense);
+            await dbContext.SaveChangesAsync();
+
+            var controller = ControllerTestUtils.InitializeController(dbContext, _user);
+            var result = await controller.Get(2);
+            result.Should().BeOfType<NotFoundResult>();
+
+        }
+    }
+
+    [Fact]
+    public async Task GetById_Returns_404_If_Does_Not_Belong_To_User()
+    {
+        using (var connection = new SqliteConnection("DataSource=:memory:"))
+        {
+            var dbContext = await InitializeDb(connection);
+            await dbContext.Set<Category>().AddRangeAsync(_defaultCategories);
+
+            var expense = new Expense
+            {
+                CategoryId = 1,
+                Amount = 200M,
+                Date = DateTime.UtcNow,
+                UserId = "otherUser",
+                Details = "test"
+            };
+
+            await dbContext.Set<Expense>().AddAsync(expense);
+            await dbContext.SaveChangesAsync();
+
+            var controller = ControllerTestUtils.InitializeController(dbContext, _user);
+            var result = await controller.Get(1);
+            result.Should().BeOfType<NotFoundResult>();
+
+        }
     }
 
     private async Task SortByAmount_And_FilterByDateAndCategory(DataContext dbContext, decimal highestAmount, decimal lowestAmount)
@@ -197,7 +278,7 @@ public sealed class ExpenseControllerTests
         var result = await controller.Get(filterByDateAndCategory, sortByAmount, firstPage25PageSize);
         result.Should().BeOfType<OkObjectResult>();
 
-        var resultValue = ResultValue<ExpenseReadDto>(result);
+        var resultValue = ResultCollectionValue<ExpenseReadDto>(result);
 
         var educationCategoryExcluded = resultValue.All(e => e.CategoryId != 2);
         var highestAmountFirst = resultValue.FirstOrDefault().Amount == highestAmount;
@@ -231,7 +312,7 @@ public sealed class ExpenseControllerTests
         var result = await controller.Get(filterByDate, sortByDate, firstPage25PageSize);
         result.Should().BeOfType<OkObjectResult>();
 
-        var resultValue = ResultValue<ExpenseReadDto>(result);
+        var resultValue = ResultCollectionValue<ExpenseReadDto>(result);
         
         var greatestDateFirst = resultValue
             .FirstOrDefault()
@@ -260,7 +341,7 @@ public sealed class ExpenseControllerTests
         dbContext.Database.EnsureCreated();
         return dbContext;
     }
-    private ICollection<T> ResultValue<T>(IActionResult result)
+    private ICollection<T> ResultCollectionValue<T>(IActionResult result)
     {
         return (result as OkObjectResult)
             .Value
