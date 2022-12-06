@@ -464,6 +464,56 @@ public sealed class ExpenseControllerTests
         }
     }
 
+    [Fact]
+    public async Task Delete_Returns_404_If_Expense_Not_Found()
+    {
+        using (var connection = new SqliteConnection("DataSource=:memory:"))
+        {
+            var dbContext = await InitializeDb(connection);
+            await dbContext.Set<Category>().AddRangeAsync(_defaultCategories);
+            await dbContext.SaveChangesAsync();
+
+
+            var expense = new Expense
+            {
+                CategoryId = 2,
+                Amount = 200M,
+                Date = DateTime.UtcNow,
+                UserId = UserId,
+                Details = "test"
+            };
+
+            await dbContext.Set<Expense>().AddAsync(expense);
+            await dbContext.SaveChangesAsync();
+
+            var controller = ControllerTestUtils.InitializeController<ExpenseController>(dbContext, _user);
+
+            var result = await controller.Delete(1);
+
+            result.Should().BeOfType<NoContentResult>();
+
+        }
+    }
+
+    [Fact]
+    public async Task Delete_Returns_NoContent_If_Deleted()
+    {
+        using (var connection = new SqliteConnection("DataSource=:memory:"))
+        {
+            var dbContext = await InitializeDb(connection);
+            await dbContext.Set<Category>().AddRangeAsync(_defaultCategories);
+            await dbContext.SaveChangesAsync();
+
+            var controller = ControllerTestUtils.InitializeController<ExpenseController>(dbContext, _user);
+
+            var result = await controller.Delete(1);
+
+            result.Should().BeOfType<NotFoundResult>();
+
+        }
+    }
+
+
 
     private async Task SortByAmount_And_FilterByDateAndCategory(DataContext dbContext, decimal highestAmount, decimal lowestAmount)
     {
