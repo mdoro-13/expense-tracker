@@ -1,6 +1,7 @@
 using System.Security.Claims;
 using Api.Controllers;
 using Api.Domain.Entities;
+using Api.DTO.Request;
 using Api.DTO.Response;
 using Api.Infrastructure.Data;
 using Api.Utils.Query;
@@ -178,6 +179,8 @@ public sealed class ExpenseControllerTests
         {
             var dbContext = await InitializeDb(connection);
             await dbContext.Set<Category>().AddRangeAsync(_defaultCategories);
+            await dbContext.SaveChangesAsync();
+
 
             var expense = new Expense
             {
@@ -205,6 +208,7 @@ public sealed class ExpenseControllerTests
         {
             var dbContext = await InitializeDb(connection);
             await dbContext.Set<Category>().AddRangeAsync(_defaultCategories);
+            await dbContext.SaveChangesAsync();
 
             var expense = new Expense
             {
@@ -232,6 +236,7 @@ public sealed class ExpenseControllerTests
         {
             var dbContext = await InitializeDb(connection);
             await dbContext.Set<Category>().AddRangeAsync(_defaultCategories);
+            await dbContext.SaveChangesAsync();
 
             var expense = new Expense
             {
@@ -248,6 +253,60 @@ public sealed class ExpenseControllerTests
             var controller = ControllerTestUtils.InitializeController<ExpenseController>(dbContext, _user);
             var result = await controller.Get(1);
             result.Should().BeOfType<NotFoundResult>();
+
+        }
+    }
+
+    [Fact]
+    public async Task Post_Returns_400_If_Category_Does_Not_Belong_To_User()
+    {
+        using (var connection = new SqliteConnection("DataSource=:memory:"))
+        {
+            var dbContext = await InitializeDb(connection);
+            await dbContext.Set<Category>().AddRangeAsync(_defaultCategories);
+            await dbContext.SaveChangesAsync();
+
+            var expenseToCreate = new ExpenseCreateDto
+            {
+                CategoryId = 1,
+                Amount = 200M,
+                Date = DateTime.UtcNow,
+                Details = "test"
+            };
+
+            var otherUser = new ClaimsPrincipal(new ClaimsIdentity(new Claim[]
+                {
+                new Claim("user_id", "otherUserId"),
+                }, "mock"));
+
+            var controller = ControllerTestUtils.InitializeController<ExpenseController>(dbContext, otherUser);
+            var result = await controller.Post(expenseToCreate);
+            result.Should().BeOfType<BadRequestResult>();
+
+        }
+    }
+
+    [Fact]
+    public async Task Post_Returns_CreatedAtRoute_If_Expense_Is_Created()
+    {
+        using (var connection = new SqliteConnection("DataSource=:memory:"))
+        {
+            var dbContext = await InitializeDb(connection);
+            await dbContext.Set<Category>().AddRangeAsync(_defaultCategories);
+            await dbContext.SaveChangesAsync();
+
+
+            var expenseToCreate = new ExpenseCreateDto
+            {
+                CategoryId = 1,
+                Amount = 200M,
+                Date = DateTime.UtcNow,
+                Details = "test"
+            };
+
+            var controller = ControllerTestUtils.InitializeController<ExpenseController>(dbContext, _user);
+            var result = await controller.Post(expenseToCreate);
+            result.Should().BeOfType<CreatedAtRouteResult>();
 
         }
     }
