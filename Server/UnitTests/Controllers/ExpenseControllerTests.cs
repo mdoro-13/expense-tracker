@@ -1,4 +1,3 @@
-using System.Security.Claims;
 using Api.Controllers;
 using Api.Domain.Entities;
 using Api.DTO.Request;
@@ -6,12 +5,13 @@ using Api.DTO.Response;
 using Api.Infrastructure.Data;
 using Api.Utils.Query;
 using FluentAssertions;
-using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.JsonPatch;
+using Microsoft.AspNetCore.JsonPatch.Operations;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
-using Namotion.Reflection;
+using System.Security.Claims;
+using System.Text;
 using UnitTests.Utils;
 using Xunit;
 
@@ -20,8 +20,10 @@ namespace UnitTests.Controllers;
 public sealed class ExpenseControllerTests
 {
     private const string UserId = "test-id";
+    private const string OtherUserId = "otherUserId";
     private const string DefaultColorValue = "xxxxxx";
     private readonly ClaimsPrincipal _user;
+    private readonly ClaimsPrincipal _otherUser;
     private readonly List<Category> _defaultCategories = new List<Category>();
 
     public ExpenseControllerTests()
@@ -30,22 +32,34 @@ public sealed class ExpenseControllerTests
         {
             new Claim("user_id", UserId),
         }, "mock"));
-        
+
+       _otherUser = new ClaimsPrincipal(new ClaimsIdentity(new Claim[]
+        {
+            new Claim("user_id", OtherUserId),
+        }, "mock"));
+
         _defaultCategories.Add(new Category
         {
             Name = "Groceries",
             UserId = UserId,
             Color = DefaultColorValue
         });
-        
+
         _defaultCategories.Add(new Category
         {
             Name = "Education",
             UserId = UserId,
             Color = DefaultColorValue
+        });        
+        
+        _defaultCategories.Add(new Category
+        {
+            Name = "Misc",
+            UserId = OtherUserId,
+            Color = DefaultColorValue
         });
     }
-    
+
     [Fact]
     public async Task GetAll_Sort_And_Filter()
     {
@@ -63,15 +77,15 @@ public sealed class ExpenseControllerTests
                 UserId = UserId,
                 Details = "Potatoes",
                 CategoryId = 1,
-                Date = new DateTime(2022,1,1)
-            };            
+                Date = new DateTime(2022, 1, 1)
+            };
             var expense2 = new Expense
             {
                 Amount = 250,
                 UserId = UserId,
                 Details = "Beef",
                 CategoryId = 1,
-                Date = new DateTime(2022,1,2)
+                Date = new DateTime(2022, 1, 2)
             };
             var expense3 = new Expense
             {
@@ -79,16 +93,16 @@ public sealed class ExpenseControllerTests
                 UserId = UserId,
                 Details = "Pluralsight subscription",
                 CategoryId = 2,
-                Date = new DateTime(2022,2,5)
+                Date = new DateTime(2022, 2, 5)
             };
-            
+
             var expense4 = new Expense
             {
                 Amount = 5000.25M,
                 UserId = UserId,
                 Details = "Book",
                 CategoryId = 2,
-                Date = new DateTime(2022,6,1)
+                Date = new DateTime(2022, 6, 1)
             };
 
             await dbContext.Set<Expense>().AddAsync(expense1);
@@ -96,7 +110,7 @@ public sealed class ExpenseControllerTests
             await dbContext.Set<Expense>().AddAsync(expense3);
             await dbContext.Set<Expense>().AddAsync(expense4);
             await dbContext.SaveChangesAsync();
-            
+
             // ACT
             await SortByDate_And_FilterByDate(dbContext, expense3.Date, expense1.Date, expense4);
             await SortByAmount_And_FilterByDateAndCategory(dbContext, expense1.Amount, expense2.Amount);
@@ -243,7 +257,7 @@ public sealed class ExpenseControllerTests
                 CategoryId = 1,
                 Amount = 200M,
                 Date = DateTime.UtcNow,
-                UserId = "otherUser",
+                UserId = OtherUserId,
                 Details = "test"
             };
 
@@ -274,12 +288,7 @@ public sealed class ExpenseControllerTests
                 Details = "test"
             };
 
-            var otherUser = new ClaimsPrincipal(new ClaimsIdentity(new Claim[]
-                {
-                new Claim("user_id", "otherUserId"),
-                }, "mock"));
-
-            var controller = ControllerTestUtils.InitializeController<ExpenseController>(dbContext, otherUser);
+            var controller = ControllerTestUtils.InitializeController<ExpenseController>(dbContext, _otherUser);
             var result = await controller.Post(expenseToCreate);
             result.Should().BeOfType<BadRequestResult>();
 
@@ -310,6 +319,151 @@ public sealed class ExpenseControllerTests
 
         }
     }
+
+    [Fact]
+    public async Task Patch_Returns_404_If_Expense_If_Not_Found()
+    {
+        using (var connection = new SqliteConnection("DataSource=:memory:"))
+        {
+            var dbContext = await InitializeDb(connection);
+            await dbContext.Set<Category>().AddRangeAsync(_defaultCategories);
+            await dbContext.SaveChangesAsync();
+
+            JsonPatchDocument<Expense> expensePatch = new();
+
+            var controller = ControllerTestUtils.InitializeController<ExpenseController>(dbContext, _user);
+
+            var result = await controller.Patch(3, expensePatch);
+
+            result.Should().BeOfType<NotFoundResult>();
+
+        }
+    }
+
+
+    [Fact]
+    public async Task Patch_Returns_400_If_Category_Does_Not_Belong_To_User()
+    {
+        using (var connection = new SqliteConnection("DataSource=:memory:"))
+        {
+            var dbContext = await InitializeDb(connection);
+            await dbContext.Set<Category>().AddRangeAsync(_defaultCategories);
+            await dbContext.SaveChangesAsync();
+
+            var expense = new Expense
+            {
+                CategoryId = 2,
+                Amount = 200M,
+                Date = DateTime.UtcNow,
+                UserId = OtherUserId,
+                Details = "test"
+            };
+
+            await dbContext.Set<Expense>().AddAsync(expense);
+            await dbContext.SaveChangesAsync();
+
+            JsonPatchDocument<Expense> expensePatch = new();
+
+            var controller = ControllerTestUtils.InitializeController<ExpenseController>(dbContext, _otherUser);
+
+            var result = await controller.Patch(1, expensePatch);
+
+            result.Should().BeOfType<BadRequestResult>();
+
+        }
+    }
+
+    [Fact]
+    public async Task Patch_Does_Not_Pass_Validation_If_Expense_Is_Not_Valid()
+    {
+        using (var connection = new SqliteConnection("DataSource=:memory:"))
+        {
+            var dbContext = await InitializeDb(connection);
+            await dbContext.Set<Category>().AddRangeAsync(_defaultCategories);
+            await dbContext.SaveChangesAsync();
+
+            var expense = new Expense
+            {
+                CategoryId = 2,
+                Amount = 200M,
+                Date = DateTime.UtcNow,
+                UserId = UserId,
+                Details = "test"
+            };
+
+            await dbContext.Set<Expense>().AddAsync(expense);
+            await dbContext.SaveChangesAsync();
+
+            // generate string higher than the maximum allowed for details
+            var builder = new StringBuilder();
+            var size = 201;
+
+            for (int i = 0; i <= size; i++)
+            {
+                builder.Append("x");
+            }
+
+
+
+            JsonPatchDocument<Expense> expensePatch = new();
+            var operation = new Operation<Expense>
+            {
+                op = "add",
+                path = "/details",
+                value = builder.ToString()
+            };
+
+            expensePatch.Operations.Add(operation);
+
+            var controller = ControllerTestUtils.InitializeController<ExpenseController>(dbContext, _user);
+
+            var result = await controller.Patch(1, expensePatch);
+
+            result.Should().BeOfType<BadRequestObjectResult>();
+        }
+    }
+
+    [Fact]
+    public async Task Patch_Does_Not_Change_User_Id()
+    {
+        using (var connection = new SqliteConnection("DataSource=:memory:"))
+        {
+            var dbContext = await InitializeDb(connection);
+            await dbContext.Set<Category>().AddRangeAsync(_defaultCategories);
+            await dbContext.SaveChangesAsync();
+
+            var expense = new Expense
+            {
+                CategoryId = 2,
+                Amount = 200M,
+                Date = DateTime.UtcNow,
+                UserId = UserId,
+                Details = "test"
+            };
+
+            await dbContext.Set<Expense>().AddAsync(expense);
+            await dbContext.SaveChangesAsync();
+
+            JsonPatchDocument<Expense> expensePatch = new();
+            var operation = new Operation<Expense>
+            {
+                op = "add",
+                path = "/userId",
+                value = "test"
+            };
+
+            expensePatch.Operations.Add(operation);
+
+            var controller = ControllerTestUtils.InitializeController<ExpenseController>(dbContext, _user);
+            var result = await controller.Patch(1, expensePatch);
+
+            var fetchedExpense = await dbContext.Set<Expense>().Where(e => e.Id == 1).FirstOrDefaultAsync();
+            var userIdNotChanged = string.Equals(fetchedExpense.UserId, expense.UserId);
+
+            userIdNotChanged.Should().BeTrue();
+        }
+    }
+
 
     private async Task SortByAmount_And_FilterByDateAndCategory(DataContext dbContext, decimal highestAmount, decimal lowestAmount)
     {
@@ -342,12 +496,12 @@ public sealed class ExpenseControllerTests
         var educationCategoryExcluded = resultValue.All(e => e.CategoryId != 2);
         var highestAmountFirst = resultValue.FirstOrDefault().Amount == highestAmount;
         var lowestAmountLast = resultValue.Last().Amount == lowestAmount;
-        
+
         educationCategoryExcluded.Should().BeTrue();
         highestAmountFirst.Should().BeTrue();
         lowestAmountLast.Should().BeTrue();
     }
-    
+
     private async Task SortByDate_And_FilterByDate(DataContext dbContext, DateTime greatestDate, DateTime lowestDate, Expense outOfTimeRangeExpense)
     {
         var controller = ControllerTestUtils.InitializeController<ExpenseController>(dbContext, _user);
@@ -372,7 +526,7 @@ public sealed class ExpenseControllerTests
         result.Should().BeOfType<OkObjectResult>();
 
         var resultValue = ResultCollectionValue<ExpenseReadDto>(result);
-        
+
         var greatestDateFirst = resultValue
             .FirstOrDefault()
             .Date == greatestDate;
@@ -405,5 +559,12 @@ public sealed class ExpenseControllerTests
         return (result as OkObjectResult)
             .Value
             .As<ICollection<T>>();
+    }  
+    
+    private TResponse ResultValue<TResponse, TResult>(IActionResult result) where TResult : ObjectResult
+    {
+        return (result as TResult)
+            .Value
+            .As<TResponse>();
     }
 }

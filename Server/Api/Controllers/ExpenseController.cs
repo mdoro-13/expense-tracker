@@ -114,7 +114,7 @@ public class ExpenseController : BaseApiController
 		// Otherwise, adding an expense should not be possible
 		var expenseToUpdate = await GetExpenseByIdAsync(id);
 
-            if (expenseToUpdate is null)
+        if (expenseToUpdate is null)
 		{
 			return NotFound();
 		}
