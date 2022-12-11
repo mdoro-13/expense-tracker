@@ -1,5 +1,6 @@
 using Api.Infrastructure.Data;
 using Api.Infrastructure.Data.Seed;
+using Api.Services;
 using AutoWrapper;
 using FluentValidation;
 using FluentValidation.AspNetCore;
@@ -51,6 +52,8 @@ builder.Services.AddSwaggerDocument(configure => configure.Title = APP_TITLE);
 
 builder.Services.AddDbContext<DataContext>(options =>
     options.UseNpgsql(config.GetConnectionString("ExpenseTracker")));
+
+builder.Services.AddScoped<IExpenseManager, ExpenseManager>();
 
 var app = builder.Build();
 
