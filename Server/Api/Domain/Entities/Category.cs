@@ -10,6 +10,6 @@ public class Category : IEntity<int>, IHasUser<string>
     public string Name { get; set; }
     public string Color { get; set; }
     public string UserId { get; set; }
-    public virtual ICollection<Expense> Expenses { get; set; }
-    public virtual ICollection<SpendingLimit> SpendingLimits { get; set; }
+    public ICollection<Expense> Expenses { get; set; }
+    public ICollection<SpendingLimit> SpendingLimits { get; set; }
 }

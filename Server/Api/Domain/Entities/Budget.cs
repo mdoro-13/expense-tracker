@@ -11,5 +11,5 @@ public class Budget : IEntity<int>, IHasUser<string>
     public DateTime EndDate { get; set; }
     public decimal Amount { get; set; }
     public string UserId { get; set; }
-    public virtual ICollection<SpendingLimit> SpendingLimits { get; set; }
+    public ICollection<SpendingLimit> SpendingLimits { get; set; }
 }

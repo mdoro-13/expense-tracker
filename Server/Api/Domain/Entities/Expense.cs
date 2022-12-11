@@ -11,5 +11,5 @@ public class Expense : IEntity<int>, IHasUser<string>
     public string? Details { get; set; }
     public string UserId { get; set; }
     public int? CategoryId { get; set; }
-    public virtual Category? Category { get; set; }
+    public Category? Category { get; set; }
 }
