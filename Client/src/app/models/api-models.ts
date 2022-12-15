@@ -10,6 +10,13 @@
 
 
 
+export interface BudgetReadDto {
+    id: number;
+    startDate: Date;
+    endDate: Date;
+    amount: number;
+}
+
 export interface CategoryReadDto {
     id: number;
     name: string;
