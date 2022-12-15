@@ -56,7 +56,7 @@ namespace Api.Services
                 CategorySpendingLimits = categorySpendingLimits
             };
         }
-        public bool BudgetOverlapsAsync()
+        public bool BudgetOverlapsAsync(DateTime startDate, DateTime endDate)
         {
             throw new NotImplementedException();
         }
@@ -74,7 +74,7 @@ namespace Api.Services
     public interface IExpenseManager
     {
         public Task<BudgetDetailsDto?> CalculateBudgetStatsAsync(int id, ClaimsPrincipal user);
-        public bool BudgetOverlapsAsync();
+        public bool BudgetOverlapsAsync(DateTime startDate, DateTime endDate);
         public bool BudgetExistsForExpenseDateAsync(DateTime date, ClaimsPrincipal user);
     }
 }
