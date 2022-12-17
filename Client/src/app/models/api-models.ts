@@ -17,10 +17,19 @@ export interface BudgetReadDto {
     amount: number;
 }
 
-export interface CategoryReadDto {
+export interface BudgetDetailsDto {
     id: number;
+    startDate: Date;
+    endDate: Date;
+    amount: number;
+    totalSpent: number;
+    categorySpendingLimits: CategorySpendingLimit[];
+}
+
+export interface CategorySpendingLimit {
     name: string;
-    color: string;
+    limit: number;
+    spent: number;
 }
 
 export interface ProblemDetails {
@@ -32,6 +41,12 @@ export interface ProblemDetails {
     extensions: { [key: string]: any; };
 
     [key: string]: any;
+}
+
+export interface CategoryReadDto {
+    id: number;
+    name: string;
+    color: string;
 }
 
 export interface CategoryCreateDto {

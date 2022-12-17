@@ -6,7 +6,7 @@ namespace UnitTests.Utils;
 
 public static class DbMockUtils
 {
-    public static async Task<DataContext> InitializeDb(SqliteConnection connection)
+    public static async Task<DataContext> InitializeDbAsync(SqliteConnection connection)
     {
         await connection.OpenAsync();
         var options = new DbContextOptionsBuilder<DataContext>()

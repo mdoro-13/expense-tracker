@@ -66,7 +66,7 @@ public sealed class ExpenseControllerTests
         using (var connection = new SqliteConnection("DataSource=:memory:"))
         {
             // ARRANGE
-            var dbContext = await DbMockUtils.InitializeDb(connection);
+            var dbContext = await DbMockUtils.InitializeDbAsync(connection);
 
             await dbContext.Set<Category>().AddRangeAsync(_defaultCategories);
             await dbContext.SaveChangesAsync();
@@ -132,7 +132,7 @@ public sealed class ExpenseControllerTests
         const int maxPerPage = 100;
         using (var connection = new SqliteConnection("DataSource=:memory:"))
         {
-            var dbContext = await DbMockUtils.InitializeDb(connection);
+            var dbContext = await DbMockUtils.InitializeDbAsync(connection);
             await dbContext.Set<Category>().AddRangeAsync(_defaultCategories);
             await dbContext.SaveChangesAsync();
 
@@ -191,7 +191,7 @@ public sealed class ExpenseControllerTests
     {
         using (var connection = new SqliteConnection("DataSource=:memory:"))
         {
-            var dbContext = await DbMockUtils.InitializeDb(connection);
+            var dbContext = await DbMockUtils.InitializeDbAsync(connection);
             await dbContext.Set<Category>().AddRangeAsync(_defaultCategories);
             await dbContext.SaveChangesAsync();
 
@@ -220,7 +220,7 @@ public sealed class ExpenseControllerTests
     {
         using (var connection = new SqliteConnection("DataSource=:memory:"))
         {
-            var dbContext = await DbMockUtils.InitializeDb(connection);
+            var dbContext = await DbMockUtils.InitializeDbAsync(connection);
             await dbContext.Set<Category>().AddRangeAsync(_defaultCategories);
             await dbContext.SaveChangesAsync();
 
@@ -248,7 +248,7 @@ public sealed class ExpenseControllerTests
     {
         using (var connection = new SqliteConnection("DataSource=:memory:"))
         {
-            var dbContext = await DbMockUtils.InitializeDb(connection);
+            var dbContext = await DbMockUtils.InitializeDbAsync(connection);
             await dbContext.Set<Category>().AddRangeAsync(_defaultCategories);
             await dbContext.SaveChangesAsync();
 
@@ -276,7 +276,7 @@ public sealed class ExpenseControllerTests
     {
         using (var connection = new SqliteConnection("DataSource=:memory:"))
         {
-            var dbContext = await DbMockUtils.InitializeDb(connection);
+            var dbContext = await DbMockUtils.InitializeDbAsync(connection);
             await dbContext.Set<Category>().AddRangeAsync(_defaultCategories);
             await dbContext.SaveChangesAsync();
 
@@ -300,7 +300,7 @@ public sealed class ExpenseControllerTests
     {
         using (var connection = new SqliteConnection("DataSource=:memory:"))
         {
-            var dbContext = await DbMockUtils.InitializeDb(connection);
+            var dbContext = await DbMockUtils.InitializeDbAsync(connection);
             await dbContext.Set<Category>().AddRangeAsync(_defaultCategories);
             await dbContext.SaveChangesAsync();
 
@@ -325,7 +325,7 @@ public sealed class ExpenseControllerTests
     {
         using (var connection = new SqliteConnection("DataSource=:memory:"))
         {
-            var dbContext = await DbMockUtils.InitializeDb(connection);
+            var dbContext = await DbMockUtils.InitializeDbAsync(connection);
             await dbContext.Set<Category>().AddRangeAsync(_defaultCategories);
             await dbContext.SaveChangesAsync();
 
@@ -346,7 +346,7 @@ public sealed class ExpenseControllerTests
     {
         using (var connection = new SqliteConnection("DataSource=:memory:"))
         {
-            var dbContext = await DbMockUtils.InitializeDb(connection);
+            var dbContext = await DbMockUtils.InitializeDbAsync(connection);
             await dbContext.Set<Category>().AddRangeAsync(_defaultCategories);
             await dbContext.SaveChangesAsync();
 
@@ -378,7 +378,7 @@ public sealed class ExpenseControllerTests
     {
         using (var connection = new SqliteConnection("DataSource=:memory:"))
         {
-            var dbContext = await DbMockUtils.InitializeDb(connection);
+            var dbContext = await DbMockUtils.InitializeDbAsync(connection);
             await dbContext.Set<Category>().AddRangeAsync(_defaultCategories);
             await dbContext.SaveChangesAsync();
 
@@ -428,7 +428,7 @@ public sealed class ExpenseControllerTests
     {
         using (var connection = new SqliteConnection("DataSource=:memory:"))
         {
-            var dbContext = await DbMockUtils.InitializeDb(connection);
+            var dbContext = await DbMockUtils.InitializeDbAsync(connection);
             await dbContext.Set<Category>().AddRangeAsync(_defaultCategories);
             await dbContext.SaveChangesAsync();
 
@@ -469,7 +469,7 @@ public sealed class ExpenseControllerTests
     {
         using (var connection = new SqliteConnection("DataSource=:memory:"))
         {
-            var dbContext = await DbMockUtils.InitializeDb(connection);
+            var dbContext = await DbMockUtils.InitializeDbAsync(connection);
             await dbContext.Set<Category>().AddRangeAsync(_defaultCategories);
             await dbContext.SaveChangesAsync();
 
@@ -500,7 +500,7 @@ public sealed class ExpenseControllerTests
     {
         using (var connection = new SqliteConnection("DataSource=:memory:"))
         {
-            var dbContext = await DbMockUtils.InitializeDb(connection);
+            var dbContext = await DbMockUtils.InitializeDbAsync(connection);
             await dbContext.Set<Category>().AddRangeAsync(_defaultCategories);
             await dbContext.SaveChangesAsync();
 
