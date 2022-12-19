@@ -17,14 +17,7 @@ namespace Api.Services
 
         public async Task<BudgetDetailsDto?> CalculateBudgetStatsAsync(int id, ClaimsPrincipal user)
         {
-            var budget = await _context
-                .BelongsToUser<Budget>(user)
-                .Include(b => b.SpendingLimits)
-                    .ThenInclude(x => x.Category)
-                        .ThenInclude(x => x.Expenses)
-                .Where(b => b.Id == id)
-                .AsNoTracking()
-                .FirstOrDefaultAsync();
+            var budget = await GetBudgetByIdAsync(id, user);
 
             if (budget is null)
             {
@@ -32,7 +25,7 @@ namespace Api.Services
             }
 
             decimal totalSpent = 0;
-            ICollection<CategorySpendingLimit> categorySpendingLimits = new List<CategorySpendingLimit>();
+            var categorySpendingLimits = new List<CategorySpendingLimit>();
 
             foreach (var sp in budget.SpendingLimits)
             {
@@ -56,6 +49,7 @@ namespace Api.Services
                 CategorySpendingLimits = categorySpendingLimits
             };
         }
+
         public bool BudgetOverlapsAsync(DateTime startDate, DateTime endDate)
         {
             throw new NotImplementedException();
@@ -68,6 +62,18 @@ namespace Api.Services
                 .FirstOrDefaultAsync(b => b.StartDate >= date && b.EndDate <= date);
 
             return budget is not null;
+        }
+
+        private async Task<Budget?> GetBudgetByIdAsync(int id, ClaimsPrincipal user)
+        {
+            return await _context
+                .BelongsToUser<Budget>(user)
+                .Include(b => b.SpendingLimits)
+                    .ThenInclude(x => x.Category)
+                        .ThenInclude(x => x.Expenses)
+                .Where(b => b.Id == id)
+                .AsNoTracking()
+                .FirstOrDefaultAsync();
         }
     }
 
