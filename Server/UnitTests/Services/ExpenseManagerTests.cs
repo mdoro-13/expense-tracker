@@ -140,4 +140,41 @@ public sealed class ExpenseManagerTests
         }
     }
 
+    [Fact]
+    public async Task BudgetExistsForExpenseDateAsync_Returns_Correct_Result_Based_On_Expense_Date()
+    {
+        using (var connection = new SqliteConnection("DataSource=:memory:"))
+        {
+            var dbContext = await DbMockUtils.InitializeDbAsync(connection);
+            var budget = new Budget
+            {
+                StartDate = new DateTime(2022, 1, 1),
+                EndDate = new DateTime(2022, 1, 31),
+                Amount = 5000M,
+                UserId = UserId
+            };
+            await dbContext.Set<Budget>().AddAsync(budget);
+            await dbContext.SaveChangesAsync();
+
+            var sut = new ExpenseManager(dbContext);
+            var trueResult1 = await sut.BudgetExistsForExpenseDateAsync(new DateTime(2022, 1, 1), _user);
+            var trueResult2 = await sut.BudgetExistsForExpenseDateAsync(new DateTime(2022, 1, 31), _user);
+            var trueResult3 = await sut.BudgetExistsForExpenseDateAsync(new DateTime(2022, 1, 15), _user);
+
+            var falseResult1 = await sut.BudgetExistsForExpenseDateAsync(new DateTime(2021, 12, 31), _user);
+            var falseResult2 = await sut.BudgetExistsForExpenseDateAsync(new DateTime(2022, 2, 1), _user);
+            var falseResult3 = await sut.BudgetExistsForExpenseDateAsync(new DateTime(2022, 2, 3), _user);
+
+            trueResult1.Should().BeTrue();
+            trueResult2.Should().BeTrue();
+            trueResult3.Should().BeTrue();
+
+            falseResult1.Should().BeFalse();
+            falseResult2.Should().BeFalse();
+            falseResult3.Should().BeFalse();
+
+        }
+
+    }
+
 }

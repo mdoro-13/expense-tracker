@@ -55,11 +55,11 @@ namespace Api.Services
             throw new NotImplementedException();
         }
 
-        public bool BudgetExistsForExpenseDateAsync(DateTime date, ClaimsPrincipal user)
+        public async Task<bool> BudgetExistsForExpenseDateAsync(DateTime date, ClaimsPrincipal user)
         {
-            var budget = _context
+            var budget = await _context
                 .BelongsToUser<Budget>(user)
-                .FirstOrDefaultAsync(b => b.StartDate >= date && b.EndDate <= date);
+                .FirstOrDefaultAsync(b => b.StartDate <= date && b.EndDate >= date);
 
             return budget is not null;
         }
@@ -81,6 +81,6 @@ namespace Api.Services
     {
         public Task<BudgetDetailsDto?> CalculateBudgetStatsAsync(int id, ClaimsPrincipal user);
         public bool BudgetOverlapsAsync(DateTime startDate, DateTime endDate);
-        public bool BudgetExistsForExpenseDateAsync(DateTime date, ClaimsPrincipal user);
+        public Task<bool> BudgetExistsForExpenseDateAsync(DateTime date, ClaimsPrincipal user);
     }
 }
