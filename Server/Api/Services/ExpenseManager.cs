@@ -2,6 +2,7 @@
 using Api.DTO.Response;
 using Api.Infrastructure.Data;
 using Api.Utils.Extensions;
+using Bogus.DataSets;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
 
@@ -50,9 +51,26 @@ namespace Api.Services
             };
         }
 
-        public bool BudgetOverlapsAsync(DateTime startDate, DateTime endDate)
+        public async Task<bool> BudgetOverlapsAsync(DateTime startDate, DateTime endDate, ClaimsPrincipal user)
         {
-            throw new NotImplementedException();
+            var budgets = await _context
+                .BelongsToUser<Budget>(user)
+                .ToListAsync();
+
+            foreach (var budget in budgets)
+            {
+                if (startDate >= budget.StartDate && startDate <= budget.EndDate)
+                {
+                    return true;
+                }
+
+                if (endDate >= budget.StartDate && endDate <= budget.EndDate)
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         public async Task<bool> BudgetExistsForExpenseDateAsync(DateTime date, ClaimsPrincipal user)
@@ -80,7 +98,7 @@ namespace Api.Services
     public interface IExpenseManager
     {
         public Task<BudgetDetailsDto?> CalculateBudgetStatsAsync(int id, ClaimsPrincipal user);
-        public bool BudgetOverlapsAsync(DateTime startDate, DateTime endDate);
+        public Task<bool> BudgetOverlapsAsync(DateTime startDate, DateTime endDate, ClaimsPrincipal user);
         public Task<bool> BudgetExistsForExpenseDateAsync(DateTime date, ClaimsPrincipal user);
     }
 }

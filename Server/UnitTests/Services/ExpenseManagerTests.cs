@@ -1,4 +1,5 @@
 ﻿using Api.Domain.Entities;
+using Api.Infrastructure.Data;
 using Api.Services;
 using FluentAssertions;
 using Microsoft.Data.Sqlite;
@@ -177,4 +178,72 @@ public sealed class ExpenseManagerTests
 
     }
 
+    [Fact]
+    public async Task BudgetOverlapsAsync_Returns_True_If_Budget_Overlaps()
+    {
+        using (var connection = new SqliteConnection("DataSource=:memory:"))
+        {
+            var dbContext = await DbMockUtils.InitializeDbAsync(connection);
+
+            await AddBudgetsForTestingOverlapAsync(dbContext);
+
+            var sut = new ExpenseManager(dbContext);
+            var result1 = await sut.BudgetOverlapsAsync(new DateTime(2022, 1, 3), new DateTime(2022, 1, 10), _user);
+            var result2 = await sut.BudgetOverlapsAsync(new DateTime(2022, 1, 24), new DateTime(2022, 1, 28), _user);
+            var result3 = await sut.BudgetOverlapsAsync(new DateTime(2021, 12, 31), new DateTime(2022, 1, 1), _user);
+
+            result1.Should().BeTrue();
+            result2.Should().BeTrue();
+            result3.Should().BeTrue();
+        }
+    }
+    
+    [Fact]
+    public async Task BudgetOverlapsAsync_Returns_False_If_Budget_Does_Not_Overlap()
+    {
+        using (var connection = new SqliteConnection("DataSource=:memory:"))
+        {
+            var dbContext = await DbMockUtils.InitializeDbAsync(connection);
+
+            await AddBudgetsForTestingOverlapAsync(dbContext);
+
+            var sut = new ExpenseManager(dbContext);
+            var result1 = await sut.BudgetOverlapsAsync(new DateTime(2022, 1, 26), new DateTime(2022, 1, 29), _user);
+            var result2 = await sut.BudgetOverlapsAsync(new DateTime(2022, 2, 16), new DateTime(2022, 2, 19), _user);
+            var result3 = await sut.BudgetOverlapsAsync(new DateTime(2021, 12, 29), new DateTime(2022, 12, 31), _user);
+
+            result1.Should().BeFalse();
+            result2.Should().BeFalse();
+            result3.Should().BeFalse();
+        }
+    }
+
+    private static async Task AddBudgetsForTestingOverlapAsync(DataContext dbContext)
+    {
+        var budget1 = new Budget
+        {
+            Amount = 1,
+            UserId = UserId,
+            StartDate = new DateTime(2022, 1, 1),
+            EndDate = new DateTime(2022, 1, 15)
+        };
+        var budget2 = new Budget
+        {
+            Amount = 1,
+            UserId = UserId,
+            StartDate = new DateTime(2022, 1, 16),
+            EndDate = new DateTime(2022, 1, 25)
+        };
+        var budget3 = new Budget
+        {
+            Amount = 1,
+            UserId = UserId,
+            StartDate = new DateTime(2022, 2, 1),
+            EndDate = new DateTime(2022, 2, 10)
+        };
+        await dbContext.Set<Budget>().AddAsync(budget1);
+        await dbContext.Set<Budget>().AddAsync(budget2);
+        await dbContext.Set<Budget>().AddAsync(budget3);
+        await dbContext.SaveChangesAsync();
+    }
 }
