@@ -8,9 +8,8 @@ namespace Api.Validation.DTO
         public BudgetCreateValidator()
         {
             RuleFor(b => b.StartDate)
-                .GreaterThanOrEqualTo(b => b.EndDate)
-                .WithMessage("End date cannot be greater than the start date");
-
+                .LessThanOrEqualTo(b => b.EndDate)
+                .WithMessage("Start date cannot be greater than the end date.");
         }
     }
 }
