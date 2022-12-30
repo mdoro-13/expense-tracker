@@ -1,8 +1,10 @@
 ﻿using Api.Domain.Entities;
+using Api.DTO.Request;
 using Api.DTO.Response;
 using Api.Infrastructure.Data;
 using Api.Services;
 using Api.Utils.Extensions;
+using Api.Utils.Helpers;
 using Mapster;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -45,6 +47,29 @@ namespace Api.Controllers
             }
 
             return Ok(budgetStats);
+        }
+
+        [ProducesResponseType(StatusCodes.Status201Created)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [HttpPost]
+        public async Task<IActionResult> Post(BudgetCreateDto budgetCreateDto)
+        {
+            if (await _expenseManager.BudgetOverlapsAsync(budgetCreateDto.StartDate, budgetCreateDto.EndDate, User))
+            {
+                return BadRequest("The budget cannot overlap with other budgets.");
+            }
+
+            var budget = budgetCreateDto.Adapt<Budget>();
+            budget.UserId = JwtUtils.GetUserId(User)!;
+
+            await _context.Set<Budget>().AddAsync(budget);
+
+            if (await _context.SaveChangesAsync() <= 0)
+            {
+                return BadRequest();
+            }
+
+            return CreatedAtRoute("GetCategory", new { Id = budget.Id }, budget.Adapt<BudgetReadDto>());
         }
     }
 }

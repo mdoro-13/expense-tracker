@@ -43,6 +43,12 @@ export interface ProblemDetails {
     [key: string]: any;
 }
 
+export interface BudgetCreateDto {
+    startDate: Date;
+    endDate: Date;
+    amount: number;
+}
+
 export interface CategoryReadDto {
     id: number;
     name: string;
