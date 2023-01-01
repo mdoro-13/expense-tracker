@@ -49,17 +49,6 @@ export interface BudgetCreateDto {
     amount: number;
 }
 
-export interface CategoryReadDto {
-    id: number;
-    name: string;
-    color: string;
-}
-
-export interface CategoryCreateDto {
-    name: string;
-    color: string;
-}
-
 export interface OperationBase {
     path?: string | null;
     op?: string | null;
@@ -72,6 +61,17 @@ export interface Operation extends OperationBase {
 
 export function isOperation(object: any): object is Operation {
     return object && object[''] === 'Operation';
+}
+
+export interface CategoryReadDto {
+    id: number;
+    name: string;
+    color: string;
+}
+
+export interface CategoryCreateDto {
+    name: string;
+    color: string;
 }
 
 export interface ExpenseReadDto {

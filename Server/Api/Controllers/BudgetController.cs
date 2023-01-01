@@ -6,6 +6,7 @@ using Api.Services;
 using Api.Utils.Extensions;
 using Api.Utils.Helpers;
 using Mapster;
+using Microsoft.AspNetCore.JsonPatch;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -70,6 +71,42 @@ namespace Api.Controllers
             }
 
             return CreatedAtRoute("GetCategory", new { Id = budget.Id }, budget.Adapt<BudgetReadDto>());
+        }
+
+
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [HttpPatch("{id:int}")]
+        public async Task<IActionResult> Patch(int id, [FromBody] JsonPatchDocument<Budget> budgetPatch)
+        {
+            var budgetToUpdate = await _context
+                .BelongsToUser<Budget>(User)
+                .FirstOrDefaultAsync(b => b.Id == id);
+
+            if (budgetToUpdate is null)
+            {
+                return NotFound();
+            }
+
+            budgetPatch.ApplyTo(budgetToUpdate);
+
+            // TODO: Fix budget overlap if the budget is edited and overlaps with itself
+            if (await _expenseManager.BudgetOverlapsAsync(budgetToUpdate.StartDate, budgetToUpdate.EndDate, User, budgetToUpdate.Id))
+            {
+                return BadRequest("The budget cannot overlap with other budgets.");
+            }
+
+            _context.Set<Budget>().Update(budgetToUpdate);
+            _context.Entry(budgetToUpdate).Property(x => x.UserId).IsModified = false;
+
+            if (await _context.SaveChangesAsync() <= 0)
+            {
+                return BadRequest();
+            }
+
+            return NoContent();
+
         }
     }
 }
