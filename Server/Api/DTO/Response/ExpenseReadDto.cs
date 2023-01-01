@@ -3,9 +3,9 @@
 
 public sealed record ExpenseReadDto
 {
-    public int Id { get; set; }
-    public decimal Amount { get; set; }
-    public DateTime Date { get; set; }
-    public string Details { get; set; }
-    public int? CategoryId { get; set; }
+    public int Id { get; init; }
+    public decimal Amount { get; init; }
+    public DateTime Date { get; init; }
+    public string Details { get; init; }
+    public int? CategoryId { get; init; }
 }

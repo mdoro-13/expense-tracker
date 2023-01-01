@@ -3,12 +3,12 @@
 
 public sealed record BudgetDetailsDto
 {
-    public int Id { get; set; }
-    public DateTime StartDate { get; set; }
-    public DateTime EndDate { get; set; }
-    public decimal Amount { get; set; }
-    public decimal TotalSpent { get; set; }
-    public ICollection<CategorySpendingLimit> CategorySpendingLimits { get; set; }
+    public int Id { get; init; }
+    public DateTime StartDate { get; init; }
+    public DateTime EndDate { get; init; }
+    public decimal Amount { get; init; }
+    public decimal TotalSpent { get; init; }
+    public ICollection<CategorySpendingLimit> CategorySpendingLimits { get; init; }
 }
 
 public sealed record CategorySpendingLimit
