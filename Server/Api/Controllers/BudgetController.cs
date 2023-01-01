@@ -89,7 +89,6 @@ namespace Api.Controllers
 
             budgetPatch.ApplyTo(budgetToUpdate);
 
-            // TODO: Fix budget overlap if the budget is edited and overlaps with itself
             if (await _expenseManager.BudgetOverlapsAsync(budgetToUpdate.StartDate, budgetToUpdate.EndDate, User, budgetToUpdate.Id))
             {
                 return BadRequest("The budget cannot overlap with other budgets.");

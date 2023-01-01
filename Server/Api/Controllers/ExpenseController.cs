@@ -2,6 +2,7 @@
 using Api.DTO.Request;
 using Api.DTO.Response;
 using Api.Infrastructure.Data;
+using Api.Services;
 using Api.Utils.Extensions;
 using Api.Utils.Helpers;
 using Api.Utils.Query;
@@ -16,12 +17,14 @@ namespace Api.Controllers;
 public class ExpenseController : BaseApiController
 {
 	private readonly DataContext _context;
-	public ExpenseController(DataContext context)
-	{
-		_context = context;
-	}
+	private readonly IExpenseManager _expenseManager;
+    public ExpenseController(DataContext context, IExpenseManager expenseManager)
+    {
+        _context = context;
+        _expenseManager = expenseManager;
+    }
 
-	[HttpGet]
+    [HttpGet]
 	[ProducesResponseType(typeof(ICollection<ExpenseReadDto>), StatusCodes.Status200OK)]
 	public async Task<IActionResult> Get([FromQuery] ExpenseFilter filter, [FromQuery] ExpenseSort sort, [FromQuery] ExpensePaging paging)
 	{
@@ -83,8 +86,12 @@ public class ExpenseController : BaseApiController
 	[HttpPost]
 	public async Task<IActionResult> Post(ExpenseCreateDto dto)
 	{
-		// TODO: check if expense belongs to a budget
-		// Otherwise, adding an expense should not be possible
+		var budgetExistsForExpense = await _expenseManager.BudgetExistsForExpenseDateAsync(dto.Date, User);
+
+		if (!budgetExistsForExpense)
+		{
+			return BadRequest("An expense must be added within the date ranges of a budget.");
+		}
 
 		if (dto.CategoryId is not null && !(await ExpenseCategoryBelongsToUserAsync(dto.CategoryId)))
 		{
@@ -110,9 +117,7 @@ public class ExpenseController : BaseApiController
 	[HttpPatch("{id:int}")]
 	public async Task<IActionResult> Patch(int id, [FromBody] JsonPatchDocument<Expense> expensePatch)
 	{
-		// TODO: check if expense belongs to a budget
-		// Otherwise, adding an expense should not be possible
-		var expenseToUpdate = await GetExpenseByIdAsync(id);
+        var expenseToUpdate = await GetExpenseByIdAsync(id);
 
         if (expenseToUpdate is null)
 		{
@@ -121,6 +126,12 @@ public class ExpenseController : BaseApiController
 
 		expensePatch.ApplyTo(expenseToUpdate);
 
+        var budgetExistsForExpense = await _expenseManager.BudgetExistsForExpenseDateAsync(expenseToUpdate.Date, User);
+
+        if (!budgetExistsForExpense)
+        {
+            return BadRequest("An expense must be added within the date ranges of a budget.");
+        }
 
         if (expenseToUpdate.CategoryId is not null && !(await ExpenseCategoryBelongsToUserAsync(expenseToUpdate.CategoryId)))
         {

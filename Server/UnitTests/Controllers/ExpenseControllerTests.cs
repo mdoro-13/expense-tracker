@@ -3,6 +3,7 @@ using Api.Domain.Entities;
 using Api.DTO.Request;
 using Api.DTO.Response;
 using Api.Infrastructure.Data;
+using Api.Services;
 using Api.Utils.Query;
 using FluentAssertions;
 using Microsoft.AspNetCore.JsonPatch;
@@ -10,6 +11,7 @@ using Microsoft.AspNetCore.JsonPatch.Operations;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
+using Moq;
 using System.Security.Claims;
 using System.Text;
 using UnitTests.Utils;
@@ -25,6 +27,9 @@ public sealed class ExpenseControllerTests
     private readonly ClaimsPrincipal _user;
     private readonly ClaimsPrincipal _otherUser;
     private readonly List<Category> _defaultCategories = new List<Category>();
+
+    private readonly Mock<IExpenseManager> _expenseManagerMock;
+
 
     public ExpenseControllerTests()
     {
@@ -58,6 +63,9 @@ public sealed class ExpenseControllerTests
             UserId = OtherUserId,
             Color = DefaultColorValue
         });
+
+        _expenseManagerMock = new Mock<IExpenseManager>();
+        _expenseManagerMock.Setup(em => em.BudgetExistsForExpenseDateAsync(It.IsAny<DateTime>(), It.IsAny<ClaimsPrincipal>())).ReturnsAsync(true);
     }
 
     [Fact]
@@ -150,7 +158,7 @@ public sealed class ExpenseControllerTests
 
             await dbContext.SaveChangesAsync();
 
-            var controller = ControllerTestUtils.InitializeController<ExpenseController>(dbContext, _user);
+            var controller = ControllerTestUtils.InitializeController<ExpenseController>(dbContext, _user, _expenseManagerMock.Object);
             var paging = new ExpensePaging
             {
                 PageNumber = pageNumber,
@@ -208,7 +216,7 @@ public sealed class ExpenseControllerTests
             await dbContext.Set<Expense>().AddAsync(expense);
             await dbContext.SaveChangesAsync();
 
-            var controller = ControllerTestUtils.InitializeController<ExpenseController>(dbContext, _user);
+            var controller = ControllerTestUtils.InitializeController<ExpenseController>(dbContext, _user, _expenseManagerMock.Object);
             var result = await controller.Get(1);
             result.Should().BeOfType<OkObjectResult>();
 
@@ -236,7 +244,7 @@ public sealed class ExpenseControllerTests
             await dbContext.Set<Expense>().AddAsync(expense);
             await dbContext.SaveChangesAsync();
 
-            var controller = ControllerTestUtils.InitializeController<ExpenseController>(dbContext, _user);
+            var controller = ControllerTestUtils.InitializeController<ExpenseController>(dbContext, _user, _expenseManagerMock.Object);
             var result = await controller.Get(2);
             result.Should().BeOfType<NotFoundResult>();
 
@@ -264,7 +272,7 @@ public sealed class ExpenseControllerTests
             await dbContext.Set<Expense>().AddAsync(expense);
             await dbContext.SaveChangesAsync();
 
-            var controller = ControllerTestUtils.InitializeController<ExpenseController>(dbContext, _user);
+            var controller = ControllerTestUtils.InitializeController<ExpenseController>(dbContext, _user, _expenseManagerMock.Object);
             var result = await controller.Get(1);
             result.Should().BeOfType<NotFoundResult>();
 
@@ -288,7 +296,7 @@ public sealed class ExpenseControllerTests
                 Details = "test"
             };
 
-            var controller = ControllerTestUtils.InitializeController<ExpenseController>(dbContext, _otherUser);
+            var controller = ControllerTestUtils.InitializeController<ExpenseController>(dbContext, _otherUser, _expenseManagerMock.Object);
             var result = await controller.Post(expenseToCreate);
             result.Should().BeOfType<BadRequestResult>();
 
@@ -313,7 +321,7 @@ public sealed class ExpenseControllerTests
                 Details = "test"
             };
 
-            var controller = ControllerTestUtils.InitializeController<ExpenseController>(dbContext, _user);
+            var controller = ControllerTestUtils.InitializeController<ExpenseController>(dbContext, _user, _expenseManagerMock.Object);
             var result = await controller.Post(expenseToCreate);
             result.Should().BeOfType<CreatedAtRouteResult>();
 
@@ -331,7 +339,7 @@ public sealed class ExpenseControllerTests
 
             JsonPatchDocument<Expense> expensePatch = new();
 
-            var controller = ControllerTestUtils.InitializeController<ExpenseController>(dbContext, _user);
+            var controller = ControllerTestUtils.InitializeController<ExpenseController>(dbContext, _user, _expenseManagerMock.Object);
 
             var result = await controller.Patch(3, expensePatch);
 
@@ -364,10 +372,11 @@ public sealed class ExpenseControllerTests
 
             JsonPatchDocument<Expense> expensePatch = new();
 
-            var controller = ControllerTestUtils.InitializeController<ExpenseController>(dbContext, _otherUser);
+            var controller = ControllerTestUtils.InitializeController<ExpenseController>(dbContext, _otherUser, _expenseManagerMock.Object);
 
             var result = await controller.Patch(1, expensePatch);
 
+            _expenseManagerMock.Verify(em => em.BudgetExistsForExpenseDateAsync(It.IsAny<DateTime>(), It.IsAny<ClaimsPrincipal>()), Times.Once);
             result.Should().BeOfType<BadRequestResult>();
 
         }
@@ -415,10 +424,10 @@ public sealed class ExpenseControllerTests
 
             expensePatch.Operations.Add(operation);
 
-            var controller = ControllerTestUtils.InitializeController<ExpenseController>(dbContext, _user);
+            var controller = ControllerTestUtils.InitializeController<ExpenseController>(dbContext, _user, _expenseManagerMock.Object);
 
             var result = await controller.Patch(1, expensePatch);
-
+            _expenseManagerMock.Verify(em => em.BudgetExistsForExpenseDateAsync(It.IsAny<DateTime>(), It.IsAny<ClaimsPrincipal>()), Times.Once);
             result.Should().BeOfType<BadRequestObjectResult>();
         }
     }
@@ -454,12 +463,13 @@ public sealed class ExpenseControllerTests
 
             expensePatch.Operations.Add(operation);
 
-            var controller = ControllerTestUtils.InitializeController<ExpenseController>(dbContext, _user);
+            var controller = ControllerTestUtils.InitializeController<ExpenseController>(dbContext, _user, _expenseManagerMock.Object);
             var result = await controller.Patch(1, expensePatch);
 
             var fetchedExpense = await dbContext.Set<Expense>().Where(e => e.Id == 1).FirstOrDefaultAsync();
             var userIdNotChanged = string.Equals(fetchedExpense.UserId, expense.UserId);
 
+            _expenseManagerMock.Verify(em => em.BudgetExistsForExpenseDateAsync(It.IsAny<DateTime>(), It.IsAny<ClaimsPrincipal>()), Times.Once);
             userIdNotChanged.Should().BeTrue();
         }
     }
@@ -486,7 +496,7 @@ public sealed class ExpenseControllerTests
             await dbContext.Set<Expense>().AddAsync(expense);
             await dbContext.SaveChangesAsync();
 
-            var controller = ControllerTestUtils.InitializeController<ExpenseController>(dbContext, _user);
+            var controller = ControllerTestUtils.InitializeController<ExpenseController>(dbContext, _user, _expenseManagerMock.Object);
 
             var result = await controller.Delete(1);
 
@@ -504,7 +514,7 @@ public sealed class ExpenseControllerTests
             await dbContext.Set<Category>().AddRangeAsync(_defaultCategories);
             await dbContext.SaveChangesAsync();
 
-            var controller = ControllerTestUtils.InitializeController<ExpenseController>(dbContext, _user);
+            var controller = ControllerTestUtils.InitializeController<ExpenseController>(dbContext, _user, _expenseManagerMock.Object);
 
             var result = await controller.Delete(1);
 
@@ -517,7 +527,7 @@ public sealed class ExpenseControllerTests
 
     private async Task SortByAmount_And_FilterByDateAndCategory(DataContext dbContext, decimal highestAmount, decimal lowestAmount)
     {
-        var controller = ControllerTestUtils.InitializeController<ExpenseController>(dbContext, _user);
+        var controller = ControllerTestUtils.InitializeController<ExpenseController>(dbContext, _user, _expenseManagerMock.Object);
 
         var filterByDateAndCategory = new ExpenseFilter
         {
@@ -554,7 +564,7 @@ public sealed class ExpenseControllerTests
 
     private async Task SortByDate_And_FilterByDate(DataContext dbContext, DateTime greatestDate, DateTime lowestDate, Expense outOfTimeRangeExpense)
     {
-        var controller = ControllerTestUtils.InitializeController<ExpenseController>(dbContext, _user);
+        var controller = ControllerTestUtils.InitializeController<ExpenseController>(dbContext, _user, _expenseManagerMock.Object);
 
         var filterByDate = new ExpenseFilter
         {
