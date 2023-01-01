@@ -1,6 +1,5 @@
 ﻿using Api.Domain.Entities;
 using Api.DTO.Request;
-using Api.DTO.Response;
 using Api.Infrastructure.Data;
 using Api.Utils.Extensions;
 using Mapster;
@@ -57,8 +56,36 @@ public class SpendingLimitController : BaseApiController
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [HttpPatch("{id:int}")]
-    public async Task<IActionResult> Patch(int id, [FromBody] JsonPatchDocument<SpendingLimit> expensePatch)
+    public async Task<IActionResult> Patch(int id, [FromBody] JsonPatchDocument<SpendingLimit> spendingLimitPatch)
     {
+        var spendingLimitToUpdate = await _context.Set<SpendingLimit>()
+            .FirstOrDefaultAsync(sp => sp.Id == id);
+
+        if (spendingLimitToUpdate is null)
+        {
+            return NotFound();
+        }
+
+        var budgetExists = (await _context.BelongsToUser<Budget>(User)
+            .Where(b => b.Id == spendingLimitToUpdate.BudgetId)
+            .FirstOrDefaultAsync()) is not null;
+
+        if (!budgetExists)
+        {
+            return BadRequest("The budget does not exist");
+        }
+
+        var categoryExists = (await _context.BelongsToUser<Category>(User)
+            .Where(b => b.Id == spendingLimitToUpdate.CategoryId)
+            .FirstOrDefaultAsync()) is not null;
+
+        if (!categoryExists)
+        {
+            return BadRequest("The category does not exist");
+        }
+
+        spendingLimitPatch.ApplyTo(spendingLimitToUpdate);
+        
         return Ok();
     }
 }
