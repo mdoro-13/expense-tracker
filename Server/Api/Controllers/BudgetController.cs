@@ -80,9 +80,7 @@ namespace Api.Controllers
         [HttpPatch("{id:int}")]
         public async Task<IActionResult> Patch(int id, [FromBody] JsonPatchDocument<Budget> budgetPatch)
         {
-            var budgetToUpdate = await _context
-                .BelongsToUser<Budget>(User)
-                .FirstOrDefaultAsync(b => b.Id == id);
+            var budgetToUpdate = await GetBudgetByIdAsync(id);
 
             if (budgetToUpdate is null)
             {
@@ -107,6 +105,35 @@ namespace Api.Controllers
 
             return NoContent();
 
+        }
+
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [HttpDelete("{id:int}")]
+        public async Task<IActionResult> Delete(int id)
+        {
+            var budgetToDelete = await GetBudgetByIdAsync(id);
+
+            if (budgetToDelete is null)
+            {
+                return NotFound();
+            }
+
+            _context.Set<Budget>().Remove(budgetToDelete);
+
+            if (await _context.SaveChangesAsync() <= 0)
+            {
+                return BadRequest();
+            }
+
+            return NoContent();
+        }
+
+        private async Task<Budget?> GetBudgetByIdAsync(int id)
+        {
+            return await _context
+                .BelongsToUser<Budget>(User)
+                .FirstOrDefaultAsync(b => b.Id == id);
         }
     }
 }
