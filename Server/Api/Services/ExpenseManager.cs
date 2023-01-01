@@ -51,11 +51,18 @@ namespace Api.Services
             };
         }
 
-        public async Task<bool> BudgetOverlapsAsync(DateTime startDate, DateTime endDate, ClaimsPrincipal user)
+        public async Task<bool> BudgetOverlapsAsync(DateTime startDate, DateTime endDate, ClaimsPrincipal user, int existingBudgetId = 0)
         {
-            var budgets = await _context
-                .BelongsToUser<Budget>(user)
-                .ToListAsync();
+            var query = _context
+                .BelongsToUser<Budget>(user);
+
+            if (existingBudgetId > 0)
+            {
+                query = query
+                    .Where(b => b.Id != existingBudgetId);
+            }
+
+            var budgets = await query.ToListAsync();
 
             foreach (var budget in budgets)
             {
@@ -98,7 +105,15 @@ namespace Api.Services
     public interface IExpenseManager
     {
         public Task<BudgetDetailsDto?> CalculateBudgetStatsAsync(int id, ClaimsPrincipal user);
-        public Task<bool> BudgetOverlapsAsync(DateTime startDate, DateTime endDate, ClaimsPrincipal user);
+        /// <summary>
+        /// Explicitly pass the existing budget id only if the check is done when updating a budget.
+        /// </summary>
+        /// <param name="startDate"></param>
+        /// <param name="endDate"></param>
+        /// <param name="user"></param>
+        /// <param name="existingBudgetId"></param>
+        /// <returns></returns>
+        public Task<bool> BudgetOverlapsAsync(DateTime startDate, DateTime endDate, ClaimsPrincipal user, int existingBudgetId = 0);
         public Task<bool> BudgetExistsForExpenseDateAsync(DateTime date, ClaimsPrincipal user);
     }
 }
