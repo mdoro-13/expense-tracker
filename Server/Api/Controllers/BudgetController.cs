@@ -94,7 +94,6 @@ namespace Api.Controllers
                 return BadRequest("The budget cannot overlap with other budgets.");
             }
 
-            _context.Set<Budget>().Update(budgetToUpdate);
             _context.Entry(budgetToUpdate).Property(x => x.UserId).IsModified = false;
 
             if (await _context.SaveChangesAsync() <= 0)

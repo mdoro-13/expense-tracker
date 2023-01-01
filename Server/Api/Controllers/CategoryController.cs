@@ -99,8 +99,6 @@ public class CategoryController : BaseApiController
 			return BadRequest(new { errors });
 		}
 
-		_context.Set<Category>().Update(categoryToUpdate);
-
 		_context.Entry(categoryToUpdate).Property(x => x.UserId).IsModified = false;
 
         if (await _context.SaveChangesAsync() <= 0)
