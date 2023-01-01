@@ -1,4 +1,6 @@
 ﻿namespace Api.DTO.Response
+#pragma warning disable CS8618
+
 {
     public sealed record BudgetReadDto
     {

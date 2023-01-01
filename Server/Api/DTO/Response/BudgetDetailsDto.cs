@@ -13,6 +13,7 @@ public sealed record BudgetDetailsDto
 
 public sealed record CategorySpendingLimit
 {
+    public int Id { get; set; }
     public string Name { get; set; }
     public decimal Limit { get; set; }
     public decimal Spent { get; set; }

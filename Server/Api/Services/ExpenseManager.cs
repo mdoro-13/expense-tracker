@@ -32,6 +32,7 @@ namespace Api.Services
             {
                 var categorySpendingLimit = new CategorySpendingLimit
                 {
+                    Id = sp!.Id,
                     Name = sp!.Category!.Name,
                     Limit = sp.Amount,
                     Spent = sp.Category.Expenses.Sum(x => x.Amount)

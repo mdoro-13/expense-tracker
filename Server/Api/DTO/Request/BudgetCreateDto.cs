@@ -1,4 +1,6 @@
 ﻿namespace Api.DTO.Request
+#pragma warning disable CS8618
+
 {
     public sealed record BudgetCreateDto
     {

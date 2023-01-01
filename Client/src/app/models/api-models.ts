@@ -27,6 +27,7 @@ export interface BudgetDetailsDto {
 }
 
 export interface CategorySpendingLimit {
+    id: number;
     name: string;
     limit: number;
     spent: number;
@@ -92,4 +93,10 @@ export interface ExpenseCreateDto {
     date: Date;
     details: string;
     categoryId?: number | null;
+}
+
+export interface SpendingLimitCreateDto {
+    amount: number;
+    categoryId?: number | null;
+    budgetId: number;
 }
