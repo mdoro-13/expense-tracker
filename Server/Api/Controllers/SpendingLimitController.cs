@@ -86,6 +86,30 @@ public class SpendingLimitController : BaseApiController
 
         spendingLimitPatch.ApplyTo(spendingLimitToUpdate);
         
-        return Ok();
+        return NoContent();
+    }
+
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [HttpDelete("{id:int}")]
+    public async Task<IActionResult> Delete(int id)
+    {
+        var spendingLimitToDelete = await _context.Set<SpendingLimit>()
+            .FirstOrDefaultAsync(sp => sp.Id == id);
+
+        if (spendingLimitToDelete is null)
+        {
+            return NotFound();
+        }
+
+        _context.Set<SpendingLimit>().Remove(spendingLimitToDelete);
+
+        if (await _context.SaveChangesAsync() <= 0)
+        {
+            return BadRequest();
+        }
+
+        return NoContent();
+
     }
 }
