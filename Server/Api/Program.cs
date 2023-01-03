@@ -1,7 +1,6 @@
 using Api.Infrastructure.Data;
 using Api.Infrastructure.Data.Seed;
 using Api.Services;
-using AutoWrapper;
 using FluentValidation;
 using FluentValidation.AspNetCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -83,8 +82,6 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-
-app.UseApiResponseAndExceptionWrapper(new AutoWrapperOptions { IsDebug = app.Environment.IsDevelopment() ? true : false });
 
 app.UseRouting();
 
