@@ -1,5 +1,7 @@
 export const environment = {
   production: true,
+  // TODO: change when available
+  rootURL: 'https://localhost:7076/api',
   firebaseConfig: {
     apiKey: "AIzaSyBlXr93_YHUWhftnDrEo3CauwbI48FnO5g",
     authDomain: "expense-tracker-1cee7.firebaseapp.com",
