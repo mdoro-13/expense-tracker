@@ -8,10 +8,10 @@ public sealed record BudgetDetailsDto
     public DateTime EndDate { get; init; }
     public decimal Amount { get; init; }
     public decimal TotalSpent { get; init; }
-    public ICollection<CategorySpendingLimit> CategorySpendingLimits { get; init; }
+    public ICollection<CategorySpendingLimitDto> CategorySpendingLimits { get; init; }
 }
 
-public sealed record CategorySpendingLimit
+public sealed record CategorySpendingLimitDto
 {
     public int Id { get; set; }
     public string Name { get; set; }

@@ -89,6 +89,16 @@ namespace Api.Controllers
 
             budgetPatch.ApplyTo(budgetToUpdate);
 
+            // TODO: check if any expenses are left without budget date after operation
+            var expenses = await _context.BelongsToUser<Expense>(User)
+                .Where(e => e.Date >= budgetToUpdate.StartDate && e.Date <= budgetToUpdate.EndDate)
+                .ToListAsync();
+
+            if (await _expenseManager.AnyExpensesWithoutBudgetAsync(User))
+            {
+                return BadRequest("The update results in other expenses without a corresponding budget.");
+            }
+
             if (await _expenseManager.BudgetOverlapsAsync(budgetToUpdate.StartDate, budgetToUpdate.EndDate, User, budgetToUpdate.Id))
             {
                 return BadRequest("The budget cannot overlap with other budgets.");

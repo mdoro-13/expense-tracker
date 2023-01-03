@@ -26,11 +26,11 @@ namespace Api.Services
             }
 
             decimal totalSpent = 0;
-            var categorySpendingLimits = new List<CategorySpendingLimit>();
+            var categorySpendingLimits = new List<CategorySpendingLimitDto>();
 
             foreach (var sp in budget.SpendingLimits)
             {
-                var categorySpendingLimit = new CategorySpendingLimit
+                var categorySpendingLimit = new CategorySpendingLimitDto
                 {
                     Id = sp!.Id,
                     Name = sp!.Category!.Name,
@@ -101,6 +101,28 @@ namespace Api.Services
                 .AsNoTracking()
                 .FirstOrDefaultAsync();
         }
+
+        public async Task<bool> AnyExpensesWithoutBudgetAsync(ClaimsPrincipal user)
+        {
+            var budgets = await _context
+                .BelongsToUser<Budget>(user)
+                .ToListAsync();
+
+            var expenses = await _context
+                .BelongsToUser<Expense>(user)
+                .ToListAsync();
+
+            foreach (var expense in expenses)
+            {
+                bool withinInterval = budgets.Any(b => expense.Date >= b.StartDate && expense.Date <= b.EndDate);
+                if (!withinInterval)
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
     }
 
     public interface IExpenseManager
@@ -116,5 +138,6 @@ namespace Api.Services
         /// <returns></returns>
         public Task<bool> BudgetOverlapsAsync(DateTime startDate, DateTime endDate, ClaimsPrincipal user, int existingBudgetId = 0);
         public Task<bool> BudgetExistsForExpenseDateAsync(DateTime date, ClaimsPrincipal user);
+        public Task<bool> AnyExpensesWithoutBudgetAsync(ClaimsPrincipal user);
     }
 }

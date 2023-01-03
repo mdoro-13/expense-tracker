@@ -23,10 +23,10 @@ export interface BudgetDetailsDto {
     endDate: Date;
     amount: number;
     totalSpent: number;
-    categorySpendingLimits: CategorySpendingLimit[];
+    categorySpendingLimits: CategorySpendingLimitDto[];
 }
 
-export interface CategorySpendingLimit {
+export interface CategorySpendingLimitDto {
     id: number;
     name: string;
     limit: number;

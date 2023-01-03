@@ -218,6 +218,140 @@ public sealed class ExpenseManagerTests
         }
     }
 
+    [Fact]
+    public async Task AnyExpensesWithoutBudgetAsync_Returns_True_If_Expenses_Without_Budgets()
+    {
+        using (var connection = new SqliteConnection("DataSource=:memory:"))
+        {
+            var dbContext = await DbMockUtils.InitializeDbAsync(connection);
+            var budget1 = new Budget
+            {
+                Amount = 2000,
+                UserId = UserId,
+                StartDate = new DateTime(2020, 1, 1),
+                EndDate = new DateTime(2020, 1, 30)
+            };
+            var budget2 = new Budget
+            {
+                Amount = 2000,
+                UserId = UserId,
+                StartDate = new DateTime(2020, 2, 1),
+                EndDate = new DateTime(2020, 2, 28)
+            };
+            await dbContext.Set<Budget>().AddAsync(budget1);
+            await dbContext.Set<Budget>().AddAsync(budget2);
+            await dbContext.SaveChangesAsync();
+
+            var e1 = new Expense
+            {
+                CategoryId = null,
+                Amount = 200,
+                UserId = UserId,
+                Date = new DateTime(2020, 1, 2)
+            };
+            var e2 = new Expense
+            {
+                CategoryId = null,
+                Amount = 200,
+                UserId = UserId,
+                Date = new DateTime(2020, 1, 15)
+            };
+            var e3 = new Expense
+            {
+                CategoryId = null,
+                Amount = 200,
+                UserId = UserId,
+                Date = new DateTime(2020, 2, 15)
+            };
+            var e4 = new Expense
+            {
+                CategoryId = null,
+                Amount = 200,
+                UserId = UserId,
+                Date = new DateTime(2020, 3, 1)
+            };
+
+            await dbContext.Set<Expense>().AddAsync(e1);
+            await dbContext.Set<Expense>().AddAsync(e2);
+            await dbContext.Set<Expense>().AddAsync(e3);
+            await dbContext.Set<Expense>().AddAsync(e4);
+            await dbContext.SaveChangesAsync(); 
+
+            var sut = new ExpenseManager(dbContext);
+
+            var result = await sut.AnyExpensesWithoutBudgetAsync(_user);
+
+            result.Should().BeTrue();
+        }
+    }
+
+    [Fact]
+    public async Task AnyExpensesWithoutBudgetAsync_Returns_False_If_All_Expenses_Have_Budgets()
+    {
+        using (var connection = new SqliteConnection("DataSource=:memory:"))
+        {
+            var dbContext = await DbMockUtils.InitializeDbAsync(connection);
+            var budget1 = new Budget
+            {
+                Amount = 2000,
+                UserId = UserId,
+                StartDate = new DateTime(2020, 1, 1),
+                EndDate = new DateTime(2020, 1, 30)
+            };
+            var budget2 = new Budget
+            {
+                Amount = 2000,
+                UserId = UserId,
+                StartDate = new DateTime(2020, 2, 1),
+                EndDate = new DateTime(2020, 2, 28)
+            };
+            await dbContext.Set<Budget>().AddAsync(budget1);
+            await dbContext.Set<Budget>().AddAsync(budget2);
+            await dbContext.SaveChangesAsync();
+
+            var e1 = new Expense
+            {
+                CategoryId = null,
+                Amount = 200,
+                UserId = UserId,
+                Date = new DateTime(2020, 1, 2)
+            };
+            var e2 = new Expense
+            {
+                CategoryId = null,
+                Amount = 200,
+                UserId = UserId,
+                Date = new DateTime(2020, 1, 15)
+            };
+            var e3 = new Expense
+            {
+                CategoryId = null,
+                Amount = 200,
+                UserId = UserId,
+                Date = new DateTime(2020, 2, 15)
+            };
+            var e4 = new Expense
+            {
+                CategoryId = null,
+                Amount = 200,
+                UserId = UserId,
+                Date = new DateTime(2020, 1, 23)
+            };
+
+            await dbContext.Set<Expense>().AddAsync(e1);
+            await dbContext.Set<Expense>().AddAsync(e2);
+            await dbContext.Set<Expense>().AddAsync(e3);
+            await dbContext.Set<Expense>().AddAsync(e4);
+            await dbContext.SaveChangesAsync();
+
+            var sut = new ExpenseManager(dbContext);
+
+            var result = await sut.AnyExpensesWithoutBudgetAsync(_user);
+
+            result.Should().BeFalse();
+        }
+    }
+
     private static async Task AddBudgetsForTestingOverlapAsync(DataContext dbContext)
     {
         var budget1 = new Budget
