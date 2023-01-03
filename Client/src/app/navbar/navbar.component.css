@@ -4,7 +4,7 @@
     left: 0;
     width: 170px;
     height: 100vh;
-    background-color: rgb(63, 81, 181);
+    background-color: rgb(24, 119, 242);
     font-size: 20px;
 }
 
@@ -18,19 +18,25 @@
 }
 
 #navbar a {
-    color: white;
+    color: rgb(255, 255, 255);
     text-decoration: none; 
 }
 
 .title {
     font-size: 24px;
     font-weight: bold;
-    color: black;
+    color: rgb(28, 30, 33);
     width: 100%;
 }
 
 .title-container {
-    border-bottom: 1px solid black;
+    border-bottom: 1px solid rgb(28, 30, 33);
+}
+
+.version {
+    font-size: 10px;
+    font-weight: bold;
+    color: rgb(28, 30, 33);
 }
 
 .bottom {
