@@ -1,4 +1,9 @@
 using Api.Infrastructure.Data;
+using Api.Infrastructure.Data.Seed;
+using Api.Services;
+using AutoWrapper;
+using FluentValidation;
+using FluentValidation.AspNetCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -29,7 +34,18 @@ builder.Services
         };
     });
 
-builder.Services.AddControllers();
+builder.Services
+    .AddControllers()
+    .AddNewtonsoftJson();
+
+builder.Services
+    .AddFluentValidationAutoValidation(config =>
+    {
+        config.DisableDataAnnotationsValidation = true;
+    });
+
+builder.Services.AddValidatorsFromAssemblyContaining<Program>();
+
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerDocument(configure => configure.Title = APP_TITLE);
@@ -37,7 +53,27 @@ builder.Services.AddSwaggerDocument(configure => configure.Title = APP_TITLE);
 builder.Services.AddDbContext<DataContext>(options =>
     options.UseNpgsql(config.GetConnectionString("ExpenseTracker")));
 
+builder.Services.AddScoped<IExpenseManager, ExpenseManager>();
+
 var app = builder.Build();
+
+if (app.Environment.IsDevelopment())
+{
+    try
+    {
+        using (var scope = app.Services.CreateScope())
+        {
+            var context = scope.ServiceProvider.GetRequiredService<DataContext>();
+            await context.Database.MigrateAsync();
+            await CategoriesSeed.SeedCategoriesAsync(context);
+        }
+    }
+    catch (Exception ex)
+    {
+        var logger = app.Services.GetRequiredService<ILogger<Program>>();
+        logger.LogError(ex, "An error has occurred during migration");
+    }
+}
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
@@ -47,6 +83,8 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+app.UseApiResponseAndExceptionWrapper(new AutoWrapperOptions { IsDebug = app.Environment.IsDevelopment() ? true : false });
 
 app.UseRouting();
 

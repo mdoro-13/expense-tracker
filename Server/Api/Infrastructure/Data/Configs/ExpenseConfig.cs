@@ -14,6 +14,7 @@ public class ExpenseConfig : IEntityTypeConfiguration<Expense>
 
         builder
             .Property(e => e.Amount)
+            .HasConversion<double>()
             .IsRequired();
 
         builder
