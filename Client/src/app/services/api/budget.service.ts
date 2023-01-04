@@ -16,6 +16,6 @@ export class BudgetService {
   }
 
   public getBudget(id: number): Observable<BudgetDetailsDto> {
-    return this.http.get<BudgetDetailsDto>(environment.rootURL + '$/Budget/{id}')
+    return this.http.get<BudgetDetailsDto>(environment.rootURL + `/Budget/${id}`)
   }
 }
